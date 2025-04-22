@@ -88,6 +88,7 @@ class WDM_LD_Woo_Queue_Manager {
 		add_filter( 'learndash_woocommerce_process_silent_course_enrollment_queue_count', array( $this, 'modify_queue_limit' ) );
 		add_filter( 'learndash_woocommerce_products_count_for_silent_course_enrollment', array( $this, 'modify_product_queue_limit' ) );
 		add_action( 'woocommerce_before_checkout_form', array( $this, 'display_cart_course_limit_notice' ) );
+		add_action( 'wdm_ld_woo_process_queue_batch', array( $this, 'process_silent_course_enrollment' ) );
 		register_activation_hook( __FILE__, array( $this, 'activate_plugin' ) );
 	}
 
@@ -295,7 +296,7 @@ class WDM_LD_Woo_Queue_Manager {
 			$groups_count  += count( $groups );
 		}
 
-		$limit = get_option( $this->option_name, 10 );
+		$limit = get_option( $this->product_option_name, 10 );
 
 		if ( $courses_count + $groups_count > $limit ) {
 			wc_add_notice(
@@ -310,46 +311,69 @@ class WDM_LD_Woo_Queue_Manager {
 	}
 
 	/**
-	 * Activates the plugin by processing the silent course enrollment queue.
+	 * Activates the plugin by scheduling batch processing of the silent course enrollment queue.
 	 *
-	 * This method is triggered on plugin activation and processes any pending
-	 * course enrollments in the queue. It ensures that users gain access to
-	 * the courses or subscriptions they have purchased.
+	 * This method is triggered on plugin activation and schedules the initial batch
+	 * processing of pending course enrollments. It ensures that users gain access to
+	 * the courses or subscriptions they have purchased in a controlled manner to
+	 * prevent server timeouts.
 	 *
 	 * @since 1.0.0
 	 */
 	public function activate_plugin() {
-		$this->process_silent_course_enrollment();
+		// Schedule the initial batch processing.
+		if ( ! wp_next_scheduled( 'wdm_ld_woo_process_queue_batch' ) ) {
+			wp_schedule_single_event( time(), 'wdm_ld_woo_process_queue_batch' );
+		}
 	}
 
 	/**
-	 * Processes the silent course enrollment queue.
+	 * Processes the silent course enrollment queue in batches.
 	 *
-	 * This function retrieves the queue of pending course enrollments from
-	 * the options table and iterates over each entry. For each entry, it
-	 * either adds course access based on order ID or subscription access
-	 * based on subscription ID. Once processed, the entry is removed from
-	 * the queue, and the updated queue is saved back to the options table.
+	 * This function retrieves the queue of pending course enrollments and processes
+	 * them in configurable batch sizes. For each batch:
+	 * - Processes a limited number of items based on the configured batch size
+	 * - Updates the queue by removing processed items
+	 * - Schedules the next batch if there are remaining items
 	 *
-	 * This ensures that users are granted access to courses or subscriptions
-	 * they have purchased, processing each queued enrollment silently.
+	 * This approach prevents server timeouts when processing large numbers of
+	 * enrollments by breaking the work into smaller chunks with delays between
+	 * processing.
 	 *
 	 * @since 1.0.0
 	 */
 	public function process_silent_course_enrollment() {
 		$queue = get_option( 'learndash_woocommerce_silent_course_enrollment_queue', array() );
+		if ( empty( $queue ) ) {
+			return;
+		}
+
+		$batch_size      = get_option( $this->option_name, 4 );
+		$processed_count = 0;
+		$remaining_queue = $queue;
 
 		foreach ( $queue as $id => $args ) {
+			if ( $processed_count >= $batch_size ) {
+				break;
+			}
+
 			if ( ! empty( $args['order_id'] ) ) {
 				$this->add_course_access( $args['order_id'] );
 			} elseif ( ! empty( $args['subscription_id'] ) ) {
 				$this->add_subscription_course_access( wcs_get_subscription( $args['subscription_id'] ) );
 			}
 
-			unset( $queue[ $id ] );
+			unset( $remaining_queue[ $id ] );
+			$processed_count++;
 		}
 
-		update_option( 'learndash_woocommerce_silent_course_enrollment_queue', $queue, false );
+		// Update the queue with remaining items.
+		update_option( 'learndash_woocommerce_silent_course_enrollment_queue', $remaining_queue, false );
+
+		// If there are still items to process, schedule the next batch.
+		if ( ! empty( $remaining_queue ) ) {
+			wp_schedule_single_event( time() + 30, 'wdm_ld_woo_process_queue_batch' );
+		}
 	}
 
 	/**
