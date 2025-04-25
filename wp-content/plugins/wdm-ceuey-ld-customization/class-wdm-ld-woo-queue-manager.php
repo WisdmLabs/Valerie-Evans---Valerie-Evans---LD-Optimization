@@ -59,6 +59,18 @@ class WDM_LD_Woo_Queue_Manager {
 	 * @var String $product_option_name
 	 */
 	private $product_option_name = 'ld_woo_queue_processing_product_limit';
+	/**
+	 * Lock option name for queue processing
+	 *
+	 * @var String $lock_option_name
+	 */
+	private $lock_option_name = 'ld_woo_queue_processing_lock';
+	/**
+	 * Lock timeout in seconds
+	 *
+	 * @var int $lock_timeout
+	 */
+	private $lock_timeout = 300; // 5 minutes
 
 	/**
 	 * Gets the instance of the WDM_LD_Woo_Queue_Manager class.
@@ -321,10 +333,13 @@ class WDM_LD_Woo_Queue_Manager {
 	 * @since 1.0.0
 	 */
 	public function activate_plugin() {
+
 		// Schedule the initial batch processing.
 		if ( ! wp_next_scheduled( 'wdm_ld_woo_process_queue_batch' ) ) {
 			wp_schedule_single_event( time(), 'wdm_ld_woo_process_queue_batch' );
 		}
+		// Run the queue processing immediately.
+		do_action( 'wdm_ld_woo_process_queue_batch' );
 	}
 
 	/**
@@ -343,37 +358,77 @@ class WDM_LD_Woo_Queue_Manager {
 	 * @since 1.0.0
 	 */
 	public function process_silent_course_enrollment() {
-		$queue = get_option( 'learndash_woocommerce_silent_course_enrollment_queue', array() );
-		if ( empty( $queue ) ) {
+
+		// Check if another process is already processing the queue.
+		if ( ! $this->acquire_lock() ) {
 			return;
 		}
 
-		$batch_size      = get_option( $this->option_name, 4 );
-		$processed_count = 0;
-		$remaining_queue = $queue;
+		try {
+			$queue = get_option( 'learndash_woocommerce_silent_course_enrollment_queue', array() );
 
-		foreach ( $queue as $id => $args ) {
-			if ( $processed_count >= $batch_size ) {
-				break;
+			if ( empty( $queue ) ) {
+				return;
 			}
 
-			if ( ! empty( $args['order_id'] ) ) {
-				$this->add_course_access( $args['order_id'] );
-			} elseif ( ! empty( $args['subscription_id'] ) ) {
-				$this->add_subscription_course_access( wcs_get_subscription( $args['subscription_id'] ) );
+			$batch_size      = get_option( $this->option_name, 4 );
+			$processed_count = 0;
+			$remaining_queue = $queue;
+
+			foreach ( $queue as $id => $args ) {
+				if ( $processed_count >= $batch_size ) {
+					break;
+				}
+
+				if ( ! empty( $args['order_id'] ) ) {
+					$this->add_course_access( $args['order_id'] );
+				} elseif ( ! empty( $args['subscription_id'] ) ) {
+					$this->add_subscription_course_access( wcs_get_subscription( $args['subscription_id'] ) );
+				}
+
+				unset( $remaining_queue[ $id ] );
+				$processed_count++;
 			}
 
-			unset( $remaining_queue[ $id ] );
-			$processed_count++;
+			// Update the queue with remaining items.
+			update_option( 'learndash_woocommerce_silent_course_enrollment_queue', $remaining_queue, false );
+
+			// If there are still items to process, schedule the next batch.
+			if ( ! empty( $remaining_queue ) ) {
+				wp_schedule_single_event( time() + 30, 'wdm_ld_woo_process_queue_batch' );
+			} 
+		} finally {
+			// Always release the lock, even if an error occurs.
+			$this->release_lock();
+		}
+	}
+
+	/**
+	 * Acquires a lock for queue processing
+	 *
+	 * @return bool True if lock was acquired, false otherwise
+	 */
+	private function acquire_lock() {
+		$lock = get_option( $this->lock_option_name, false );
+
+		// If there's no lock or the lock has expired.
+		if ( ! $lock || $lock['timestamp'] < ( time() - $this->lock_timeout ) ) {
+			$new_lock = array(
+				'timestamp'  => time(),
+				'process_id' => function_exists( 'getmypid' ) ? getmypid() : uniqid( '', true ),
+			);
+			update_option( $this->lock_option_name, $new_lock, false );
+			return true;
 		}
 
-		// Update the queue with remaining items.
-		update_option( 'learndash_woocommerce_silent_course_enrollment_queue', $remaining_queue, false );
+		return false;
+	}
 
-		// If there are still items to process, schedule the next batch.
-		if ( ! empty( $remaining_queue ) ) {
-			wp_schedule_single_event( time() + 30, 'wdm_ld_woo_process_queue_batch' );
-		}
+	/**
+	 * Releases the queue processing lock
+	 */
+	private function release_lock() {
+		delete_option( $this->lock_option_name );
 	}
 
 	/**
