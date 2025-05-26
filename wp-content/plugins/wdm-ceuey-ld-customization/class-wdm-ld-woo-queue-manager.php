@@ -101,12 +101,12 @@ class WDM_LD_Woo_Queue_Manager {
 	 * @since 1.0.0
 	 */
 	private function __construct() {
-		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
-		add_action( 'admin_init', array( $this, 'register_settings' ) );
-		add_filter( 'learndash_woocommerce_process_silent_course_enrollment_queue_count', array( $this, 'modify_queue_limit' ) );
-		add_filter( 'learndash_woocommerce_products_count_for_silent_course_enrollment', array( $this, 'modify_product_queue_limit' ) );
-		add_action( 'woocommerce_before_checkout_form', array( $this, 'display_cart_course_limit_notice' ) );
-		add_action( 'wdm_ld_woo_process_queue_batch', array( $this, 'process_silent_course_enrollment' ) );
+		add_action( 'admin_menu', array( $this, 'wdm_add_admin_menu' ) );
+		add_action( 'admin_init', array( $this, 'wdm_register_settings' ) );
+		add_filter( 'learndash_woocommerce_process_silent_course_enrollment_queue_count', array( $this, 'wdm_modify_queue_limit' ) );
+		add_filter( 'learndash_woocommerce_products_count_for_silent_course_enrollment', array( $this, 'wdm_modify_product_queue_limit' ) );
+		add_action( 'woocommerce_before_checkout_form', array( $this, 'wdm_display_cart_course_limit_notice' ) );
+		add_action( 'wdm_ld_woo_process_queue_batch', array( $this, 'wdm_process_silent_course_enrollment' ) );
 		register_activation_hook( __FILE__, array( $this, 'activate_plugin' ) );
 	}
 
@@ -115,14 +115,14 @@ class WDM_LD_Woo_Queue_Manager {
 	 *
 	 * @since 1.0.0
 	 */
-	public function add_admin_menu() {
+	public function wdm_add_admin_menu() {
 		add_submenu_page(
 			'learndash-lms',
 			__( 'Queue Processing Settings', 'wdm-ld-woo-queue-manager' ),
 			__( 'Queue Processing', 'wdm-ld-woo-queue-manager' ),
 			'manage_options',
 			'wdm-ld-woo-queue-settings',
-			array( $this, 'render_settings_page' )
+			array( $this, 'wdm_render_settings_page' )
 		);
 	}
 
@@ -131,13 +131,13 @@ class WDM_LD_Woo_Queue_Manager {
 	 *
 	 * @since 1.0.0
 	 */
-	public function register_settings() {
+	public function wdm_register_settings() {
 		register_setting(
 			'ld_woo_queue_settings',
 			$this->option_name,
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_queue_limit' ),
+				'sanitize_callback' => array( $this, 'wdm_sanitize_queue_limit' ),
 				'default'           => 10,
 			)
 		);
@@ -146,7 +146,7 @@ class WDM_LD_Woo_Queue_Manager {
 			$this->product_option_name,
 			array(
 				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_queue_limit' ),
+				'sanitize_callback' => array( $this, 'wdm_sanitize_queue_limit' ),
 				'default'           => 10,
 			)
 		);
@@ -169,7 +169,7 @@ class WDM_LD_Woo_Queue_Manager {
 	 * @return int The sanitized value, which is the absolute value of the
 	 * provided value, or 1 if the provided value is less than 1.
 	 */
-	public function sanitize_queue_limit( $value ) {
+	public function wdm_sanitize_queue_limit( $value ) {
 		$value = absint( $value );
 		return max( 1, $value );
 	}
@@ -186,7 +186,7 @@ class WDM_LD_Woo_Queue_Manager {
 	 *
 	 * @since 1.0.0
 	 */
-	public function render_settings_page() {
+	public function wdm_render_settings_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
@@ -262,7 +262,7 @@ class WDM_LD_Woo_Queue_Manager {
 	 *
 	 * @return int The custom limit.
 	 */
-	public function modify_queue_limit() {
+	public function wdm_modify_queue_limit() {
 		$custom_limit = get_option( $this->option_name, 10 );
 		return absint( $custom_limit );
 	}
@@ -272,7 +272,7 @@ class WDM_LD_Woo_Queue_Manager {
 	 *
 	 * @return int The custom limit.
 	 */
-	public function modify_product_queue_limit() {
+	public function wdm_modify_product_queue_limit() {
 		$custom_limit = get_option( $this->product_option_name, 10 );
 		return absint( $custom_limit );
 	}
@@ -292,7 +292,7 @@ class WDM_LD_Woo_Queue_Manager {
 	 *
 	 * @since 1.0.0
 	 */
-	public function display_cart_course_limit_notice() {
+	public function wdm_display_cart_course_limit_notice() {
 		if ( ! is_checkout() ) {
 			return;
 		}
@@ -380,7 +380,7 @@ class WDM_LD_Woo_Queue_Manager {
 	 *
 	 * @since 1.0.0
 	 */
-	public function process_silent_course_enrollment() {
+	public function wdm_process_silent_course_enrollment() {
 
 		// Check if another process is already processing the queue.
 		if ( ! $this->acquire_lock() ) {
