@@ -1,0 +1,3 @@
+[Unreleased]
+- Feature: Added a new admin setting to allow customization of the checkout notice message shown when the course/group limit is exceeded. The message is now plain text (no counts/variables) and can be set from the plugin settings page. (See: `class-wdm-ld-woo-queue-manager.php`)
+- Feature: Added a new shortcode [ld_woo_queue_notice] to display the custom queue notice anywhere (e.g., after [uo_show]) if the course/group limit is exceeded. (See: `class-wdm-ld-woo-queue-manager.php`) 
