@@ -71,6 +71,12 @@ class WDM_LD_Woo_Queue_Manager {
 	 * @var int $lock_timeout
 	 */
 	private $lock_timeout = 300; // 5 minutes
+	/**
+	 * Option name for custom checkout notice message
+	 *
+	 * @var String $notice_message_option_name
+	 */
+	private $notice_message_option_name = 'ld_woo_queue_notice_message';
 
 	/**
 	 * Gets the instance of the WDM_LD_Woo_Queue_Manager class.
@@ -142,6 +148,15 @@ class WDM_LD_Woo_Queue_Manager {
 				'type'              => 'integer',
 				'sanitize_callback' => array( $this, 'sanitize_queue_limit' ),
 				'default'           => 10,
+			)
+		);
+		register_setting(
+			'ld_woo_queue_settings',
+			$this->notice_message_option_name,
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_textarea_field',
+				'default'           => __( 'Notice: You might experience a short delay before all courses appear in your account.', 'wdm-ld-woo-queue-manager' ),
 			)
 		);
 	}
@@ -222,6 +237,19 @@ class WDM_LD_Woo_Queue_Manager {
 							</p>
 						</td>
 					</tr>
+					<tr>
+						<th scope="row">
+							<label for="<?php echo esc_attr( $this->notice_message_option_name ); ?>">
+								<?php esc_html_e( 'Checkout Notice Message', 'wdm-ld-woo-queue-manager' ); ?>
+							</label>
+						</th>
+						<td>
+							<textarea id="<?php echo esc_attr( $this->notice_message_option_name ); ?>" name="<?php echo esc_attr( $this->notice_message_option_name ); ?>" rows="3" cols="50" class="large-text"><?php echo esc_textarea( get_option( $this->notice_message_option_name, __( 'Notice: You might experience a short delay before all courses appear in your account.', 'wdm-ld-woo-queue-manager' ) ) ); ?></textarea>
+							<p class="description">
+								<?php esc_html_e( 'Set the message shown to users at checkout when the course/group limit is exceeded. Leave blank to disable.', 'wdm-ld-woo-queue-manager' ); ?>
+							</p>
+						</td>
+					</tr>
 				</table>
 				<?php submit_button(); ?>
 			</form>
@@ -232,10 +260,9 @@ class WDM_LD_Woo_Queue_Manager {
 	/**
 	 * Modifies the default queue processing limit by returning the custom limit.
 	 *
-	 * @param int $default_limit The default limit.
 	 * @return int The custom limit.
 	 */
-	public function modify_queue_limit( $default_limit ) {
+	public function modify_queue_limit() {
 		$custom_limit = get_option( $this->option_name, 10 );
 		return absint( $custom_limit );
 	}
@@ -243,10 +270,9 @@ class WDM_LD_Woo_Queue_Manager {
 	/**
 	 * Modifies the default queue processing product limit by returning the custom limit.
 	 *
-	 * @param int $default_limit The default limit.
 	 * @return int The custom limit.
 	 */
-	public function modify_product_queue_limit( $default_limit ) {
+	public function modify_product_queue_limit() {
 		$custom_limit = get_option( $this->product_option_name, 10 );
 		return absint( $custom_limit );
 	}
@@ -308,15 +334,12 @@ class WDM_LD_Woo_Queue_Manager {
 			$groups_count  += count( $groups );
 		}
 
-		$limit = get_option( $this->product_option_name, 10 );
+		$limit          = get_option( $this->product_option_name, 10 );
+		$notice_message = trim( get_option( $this->notice_message_option_name, __( 'Notice: You might experience a short delay before all courses appear in your account.', 'wdm-ld-woo-queue-manager' ) ) );
 
-		if ( $courses_count + $groups_count > $limit ) {
+		if ( $courses_count + $groups_count > $limit && $notice_message ) {
 			wc_add_notice(
-				sprintf(
-					__( 'Notice: The total number of courses and groups across all your bundles (%1$d courses and groups) exceeds the recommended limit of %2$d courses/groups. You might experience a short delay before all courses appear in your account.', 'wdm-ld-woo-queue-manager' ),
-					$courses_count + $groups_count,
-					$limit
-				),
+				$notice_message,
 				'notice'
 			);
 		}
@@ -396,7 +419,7 @@ class WDM_LD_Woo_Queue_Manager {
 			// If there are still items to process, schedule the next batch.
 			if ( ! empty( $remaining_queue ) ) {
 				wp_schedule_single_event( time() + 30, 'wdm_ld_woo_process_queue_batch' );
-			} 
+			}
 		} finally {
 			// Always release the lock, even if an error occurs.
 			$this->release_lock();
@@ -584,9 +607,6 @@ class WDM_LD_Woo_Queue_Manager {
 				}
 			}
 		}
-
 	}
-
 }
-
 WDM_LD_Woo_Queue_Manager::get_instance();
