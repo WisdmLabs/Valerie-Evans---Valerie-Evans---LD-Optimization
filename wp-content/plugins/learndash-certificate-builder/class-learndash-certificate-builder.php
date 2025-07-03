@@ -3,7 +3,7 @@
  * Plugin Name: WDM LearnDash Certificate Builder
  * Plugin URI: https://example.com/learndash-certificate-builder
  * Description: Custom certificate builder for LearnDash courses
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Your Name
  * Author URI: https://example.com
  * Text Domain: learndash-certificate-builder
@@ -84,7 +84,6 @@ class LearnDash_Certificate_Builder {
 		$this->settings = new \LearnDash_Certificate_Builder\Admin\Settings();
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_assets' ) );
-		add_action( 'wp_ajax_lcb_save_coordinates', array( $this, 'handle_save_coordinates' ) );
 		add_action( 'wp_ajax_lcb_get_image_data', array( $this, 'handle_get_image_data' ) );
 
 		// Frontend hooks.
@@ -138,38 +137,6 @@ class LearnDash_Certificate_Builder {
 		);
 	}
 
-	/**
-	 * Handle AJAX request to save coordinates
-	 */
-	public function handle_save_coordinates() {
-		// Check nonce.
-		if ( ! check_ajax_referer( 'lcb_admin_nonce', 'nonce', false ) ) {
-			wp_send_json_error( 'Invalid nonce.' );
-		}
-
-		// Check permissions.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( 'Permission denied.' );
-		}
-
-		// Get and validate parameters.
-		$background_id = isset( $_POST['background_id'] ) ? absint( wp_unslash( $_POST['background_id'] ) ) : 0;
-		$element_type  = isset( $_POST['element_type'] ) ? sanitize_text_field( wp_unslash( $_POST['element_type'] ) ) : '';
-		$coordinates   = isset( $_POST['coordinates'] ) ? map_deep( wp_unslash( $_POST['coordinates'] ), 'absint' ) : array();
-
-		if ( ! $background_id || ! $element_type || empty( $coordinates ) ) {
-			wp_send_json_error( 'Missing required parameters.' );
-		}
-
-		// Update coordinates.
-		$success = $this->position_manager->update_element_coordinates( $background_id, $element_type, $coordinates );
-
-		if ( $success ) {
-			wp_send_json_success( 'Coordinates saved successfully.' );
-		} else {
-			wp_send_json_error( 'Failed to save coordinates.' );
-		}
-	}
 
 	/**
 	 * Enqueue admin assets

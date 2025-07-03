@@ -12,29 +12,57 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Get default coordinates if not set.
-if ( ! isset( $coordinates['default'] ) ) {
-	$coordinates['default'] = array(
-		'user_name'       => array(
-			'x' => 100,
-			'y' => 100,
-		),
-		'completion_date' => array(
-			'x' => 100,
-			'y' => 200,
-		),
-		'course_list'     => array(
-			'x' => 100,
-			'y' => 300,
-		),
-		'signature'       => array(
-			'x' => 100,
-			'y' => 400,
-		),
-	);
-}
+$default_coordinates = array(
+	'user_name'   => array(
+		'x'              => 100,
+		'y'              => 100,
+		'font_size'      => 24,
+		'font_family'    => 'Arial',
+		'text_transform' => 'none',
+	),
+	'course_list' => array(
+		'x'              => 100,
+		'y'              => 300,
+		'font_size'      => 18,
+		'font_family'    => 'Arial',
+		'text_transform' => 'none',
+	),
+	'signature'   => array(
+		'x' => 100,
+		'y' => 400,
+	),
+);
 
 // Get coordinates for current background or use defaults.
-$current_coordinates = isset( $coordinates[ $background_id ] ) ? $coordinates[ $background_id ] : $coordinates['default'];
+$current_coordinates = isset( $coordinates[ $background_id ] ) ? $coordinates[ $background_id ] : $default_coordinates;
+
+// Ensure font settings exist for username.
+if ( ! isset( $current_coordinates['user_name']['font_size'] ) ) {
+	$current_coordinates['user_name']['font_size'] = 24;
+}
+if ( ! isset( $current_coordinates['user_name']['font_family'] ) ) {
+	$current_coordinates['user_name']['font_family'] = 'Arial';
+}
+if ( ! isset( $current_coordinates['user_name']['text_transform'] ) ) {
+	$current_coordinates['user_name']['text_transform'] = 'none';
+}
+
+// Ensure font settings exist for course list.
+if ( ! isset( $current_coordinates['course_list']['font_size'] ) ) {
+	$current_coordinates['course_list']['font_size'] = 18;
+}
+if ( ! isset( $current_coordinates['course_list']['font_family'] ) ) {
+	$current_coordinates['course_list']['font_family'] = 'Arial';
+}
+if ( ! isset( $current_coordinates['course_list']['text_transform'] ) ) {
+	$current_coordinates['course_list']['text_transform'] = 'none';
+}
+
+// Only include the current background's coordinates in the form.
+$form_coordinates = array();
+if ( $background_id ) {
+	$form_coordinates[ $background_id ] = $current_coordinates;
+}
 
 ?>
 
@@ -47,8 +75,8 @@ $current_coordinates = isset( $coordinates[ $background_id ] ) ? $coordinates[ $
 		wp_nonce_field( 'lcb_admin_nonce', 'lcb_nonce' );
 		?>
 		
-		<!-- Hidden input to preserve coordinates -->
-		<input type="hidden" name="lcb_element_coordinates" value="<?php echo esc_attr( wp_json_encode( $coordinates ) ); ?>">
+		<!-- Hidden input to preserve coordinates. -->
+		<input type="hidden" name="lcb_element_coordinates" value="<?php echo esc_attr( wp_json_encode( $form_coordinates ) ); ?>">
 		
 		<div class="lcb-settings-section">
 			<h2><?php esc_html_e( 'Background Image', 'learndash-certificate-builder' ); ?></h2>
@@ -92,10 +120,9 @@ $current_coordinates = isset( $coordinates[ $background_id ] ) ? $coordinates[ $
 				<div class="lcb-canvas" style="background-image: url(<?php echo esc_url( wp_get_attachment_url( $background_id ) ); ?>)">
 					<?php
 					$elements = array(
-						'user_name'       => __( 'User Name', 'learndash-certificate-builder' ),
-						'completion_date' => __( 'Completion Date', 'learndash-certificate-builder' ),
-						'course_list'     => __( 'Course List', 'learndash-certificate-builder' ),
-						'signature'       => __( 'Signature', 'learndash-certificate-builder' ),
+						'user_name'   => __( 'User Name', 'learndash-certificate-builder' ),
+						'course_list' => __( 'Course List', 'learndash-certificate-builder' ),
+						'signature'   => __( 'Signature', 'learndash-certificate-builder' ),
 					);
 
 					foreach ( $elements as $element_id => $element_label ) :
@@ -113,12 +140,58 @@ $current_coordinates = isset( $coordinates[ $background_id ] ) ? $coordinates[ $
 								X: <input type="number" class="lcb-x-coordinate" value="<?php echo esc_attr( $pos['x'] ); ?>">
 								Y: <input type="number" class="lcb-y-coordinate" value="<?php echo esc_attr( $pos['y'] ); ?>">
 							</div>
+							<?php if ( in_array( $element_id, array( 'user_name', 'course_list' ), true ) ) : ?>
+								<div class="lcb-element-styles">
+									<div class="lcb-style-control">
+										<label>
+											<?php esc_html_e( 'Font Size:', 'learndash-certificate-builder' ); ?>
+											<input type="number" class="lcb-style-input lcb-font-size" value="<?php echo esc_attr( isset( $pos['font_size'] ) ? $pos['font_size'] : ( 'user_name' === $element_id ? 24 : 18 ) ); ?>">
+										</label>
+									</div>
+									<div class="lcb-style-control">
+										<label>
+											<?php esc_html_e( 'Font:', 'learndash-certificate-builder' ); ?>
+											<select class="lcb-style-input lcb-font-family">
+												<?php
+												$fonts         = array( 'Arial', 'Times New Roman', 'Helvetica', 'Georgia' );
+												$selected_font = isset( $pos['font_family'] ) ? $pos['font_family'] : 'Arial';
+												foreach ( $fonts as $font ) :
+													?>
+													<option value="<?php echo esc_attr( $font ); ?>" 
+														<?php selected( $selected_font, $font ); ?>>
+														<?php echo esc_html( $font ); ?>
+													</option>
+												<?php endforeach; ?>
+											</select>
+										</label>
+									</div>
+									<div class="lcb-style-control">
+										<label>
+											<?php esc_html_e( 'Text Transform:', 'learndash-certificate-builder' ); ?>
+											<select class="lcb-style-input lcb-text-transform">
+												<?php
+												$transforms         = array(
+													'none' => __( 'None', 'learndash-certificate-builder' ),
+													'uppercase' => __( 'UPPERCASE', 'learndash-certificate-builder' ),
+													'lowercase' => __( 'lowercase', 'learndash-certificate-builder' ),
+													'capitalize' => __( 'Capitalize', 'learndash-certificate-builder' ),
+												);
+												$selected_transform = isset( $pos['text_transform'] ) ? $pos['text_transform'] : 'none';
+												foreach ( $transforms as $value => $label ) :
+													?>
+													<option value="<?php echo esc_attr( $value ); ?>" 
+														<?php selected( $selected_transform, $value ); ?>>
+														<?php echo esc_html( $label ); ?>
+													</option>
+												<?php endforeach; ?>
+											</select>
+										</label>
+									</div>
+								</div>
+							<?php endif; ?>
 						</div>
 					<?php endforeach; ?>
 				</div>
-				<button type="button" class="button button-primary lcb-save-positions">
-					<?php esc_html_e( 'Save Positions', 'learndash-certificate-builder' ); ?>
-				</button>
 			</div>
 		</div>
 
@@ -166,6 +239,33 @@ var lcb_admin = {
 .lcb-element-coordinates input {
 	width: 60px;
 	margin: 0 5px;
+}
+
+.lcb-element-styles {
+	margin-top: 10px;
+	padding: 8px;
+	background: #fff;
+	border: 1px solid #e5e5e5;
+	border-radius: 3px;
+}
+
+.lcb-style-control {
+	margin-bottom: 8px;
+}
+
+.lcb-style-control:last-child {
+	margin-bottom: 0;
+}
+
+.lcb-style-control label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.lcb-style-input {
+	flex: 1;
+	min-width: 0;
 }
 
 .lcb-preview-image {

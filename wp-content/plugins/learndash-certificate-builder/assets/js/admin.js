@@ -139,44 +139,12 @@ jQuery( document ).ready( function ( $ ) {
         updateCoordinatesInput();
     } );
 
-    // Function to update hidden input with all coordinates.
+    // Function to update coordinates input with current positions
     function updateCoordinatesInput() {
         var coordinates = {};
-        var backgroundId = $( '#lcb_background_image' ).val();
+        var backgroundId = $( '#lcb_background_image' ).val() || 'default';
 
-        if ( !backgroundId ) {
-            return;
-        }
-
-        coordinates[backgroundId] = {};
-
-        $( '.lcb-draggable-element' ).each( function () {
-            var $element = $( this );
-            var elementId = $element.data( 'element' );
-            var x = parseInt( $element.find( '.lcb-x-coordinate' ).val() ) || 0;
-            var y = parseInt( $element.find( '.lcb-y-coordinate' ).val() ) || 0;
-
-            coordinates[backgroundId][elementId] = {
-                x: x,
-                y: y
-            };
-        } );
-
-        // Update hidden input.
-        $( '#lcb_element_coordinates' ).val( JSON.stringify( coordinates ) );
-    }
-
-    // Handle save button click.
-    $( '.lcb-save-positions' ).click( function ( e ) {
-        e.preventDefault();
-
-        var backgroundId = $( '#lcb_background_image' ).val();
-        if ( !backgroundId ) {
-            alert( 'Please select a background image first.' );
-            return;
-        }
-
-        var coordinates = {};
+        // Get current coordinates for all elements
         $( '.lcb-draggable-element' ).each( function () {
             var $element = $( this );
             var elementId = $element.data( 'element' );
@@ -187,33 +155,36 @@ jQuery( document ).ready( function ( $ ) {
                 x: x,
                 y: y
             };
-        } );
 
-        // Save via AJAX.
-        $.ajax( {
-            url: lcb_admin.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'lcb_save_coordinates',
-                nonce: lcb_admin.nonce,
-                background_id: backgroundId,
-                coordinates: JSON.stringify( coordinates )
-            },
-            success: function ( response ) {
-                if ( response.success ) {
-                    alert( 'Positions saved successfully.' );
-                    // Update hidden input after successful save.
-                    updateCoordinatesInput();
-                } else {
-                    alert( 'Failed to save positions: ' + response.data );
-                }
-            },
-            error: function () {
-                alert( 'Failed to save positions. Please try again.' );
+            // Add font settings for username and course list
+            if ( ['user_name', 'course_list'].includes( elementId ) ) {
+                // Get font size value directly from the input
+                var $fontSizeInput = $element.find( '.lcb-font-size' );
+                var fontSize = parseInt( $fontSizeInput.get( 0 ).value ) || ( elementId === 'user_name' ? 24 : 18 );
+                console.log( elementId + ' font size input current value:', fontSize );
+
+                coordinates[elementId].font_size = fontSize;
+                coordinates[elementId].font_family = $element.find( '.lcb-font-family' ).val() || 'Arial';
+                coordinates[elementId].text_transform = $element.find( '.lcb-text-transform' ).val() || 'none';
+
+                console.log( 'Updated font settings for ' + elementId + ':', coordinates[elementId] );
             }
         } );
+
+        // Get existing coordinates for other backgrounds
+        var existingCoordinates = JSON.parse( $( 'input[name="lcb_element_coordinates"]' ).val() || '{}' );
+        existingCoordinates[backgroundId] = coordinates;
+
+        // Update hidden input
+        $( 'input[name="lcb_element_coordinates"]' ).val( JSON.stringify( existingCoordinates ) );
+        console.log( 'Updated coordinates:', existingCoordinates );
+    }
+
+    // Update coordinates when font settings change
+    $( '.lcb-font-size, .lcb-font-family, .lcb-text-transform' ).on( 'change input', function () {
+        console.log( 'Font setting changed:', $( this ).val() );
+        updateCoordinatesInput();
     } );
 
-    // Initialize canvas dimensions on page load
     updateCanvasDimensions();
 } ); 

@@ -70,18 +70,23 @@ class CertificateGenerator {
 			// Add user name with larger font.
 			$user_name = $this->data_retriever->get_user_display_name( $user_id );
 			if ( $user_name && isset( $coordinates['user_name'] ) ) {
-				$user_name_html = sprintf( '<div style="font-size: 24pt; font-weight: bold;">%s</div>', esc_html( $user_name ) );
+				// Get font settings for username element.
+				$font_size      = isset( $coordinates['user_name']['font_size'] ) ? $coordinates['user_name']['font_size'] : 24;
+				$font_family    = isset( $coordinates['user_name']['font_family'] ) ? $coordinates['user_name']['font_family'] : 'Arial';
+				$text_transform = isset( $coordinates['user_name']['text_transform'] ) ? $coordinates['user_name']['text_transform'] : 'none';
+
+				$style = sprintf(
+					'font-family: %s; font-size: %spt; text-transform: %s; font-weight: bold;',
+					esc_attr( $font_family ),
+					esc_attr( $font_size ),
+					esc_attr( $text_transform )
+				);
+
+				$user_name_html = sprintf( '<div style="%s">%s</div>', $style, esc_html( $user_name ) );
 				$this->add_element( $mpdf, $user_name_html, $coordinates['user_name'] );
 			}
 
-			// Add completion date.
-			$completion_date = current_time( get_option( 'date_format' ) );
-			if ( isset( $coordinates['completion_date'] ) ) {
-				$date_html = sprintf( '<div style="font-size: 14pt;">%s</div>', esc_html( $completion_date ) );
-				$this->add_element( $mpdf, $date_html, $coordinates['completion_date'] );
-			}
-
-			// Add course list.
+			// Add formatted course list to certificate.
 			if ( isset( $coordinates['course_list'] ) ) {
 				$course_list = $this->get_formatted_course_list( $user_id, $course_ids );
 				$this->add_element( $mpdf, $course_list, $coordinates['course_list'] );
@@ -211,16 +216,48 @@ class CertificateGenerator {
 	 * @return string Formatted course list HTML.
 	 */
 	private function get_formatted_course_list( $user_id, $course_ids ) {
-		$html = '<div class="certificate-element" style="font-size: 12pt; line-height: 1.4;">';
+		// Get font settings from coordinates.
+		$coordinates   = get_option( 'lcb_element_coordinates', array() );
+		$background_id = get_option( 'lcb_background_image', 'default' );
+		$font_settings = isset( $coordinates[ $background_id ]['course_list'] ) ? $coordinates[ $background_id ]['course_list'] : array();
+
+		$font_size      = isset( $font_settings['font_size'] ) ? $font_settings['font_size'] : 18;
+		$font_family    = isset( $font_settings['font_family'] ) ? $font_settings['font_family'] : 'Arial';
+		$text_transform = isset( $font_settings['text_transform'] ) ? $font_settings['text_transform'] : 'none';
+
+		// Convert margins from pixels to mm using the same ratio as positions.
+		$course_margin = round( 100 * 25.4 / 96 ); // 100px converted to mm
+		$field_margin  = round( 10 * 25.4 / 96 );   // 10px converted to mm
+
+		$style = sprintf(
+			'font-family: %s; font-size: %spt; text-transform: %s; line-height: 1.6;',
+			esc_attr( $font_family ),
+			esc_attr( $font_size ),
+			esc_attr( $text_transform )
+		);
+
+		$html = sprintf( '<div class="certificate-element" style="%s">', $style );
 
 		foreach ( $course_ids as $course_id ) {
 			$completion_date = $this->data_retriever->get_course_completion_date( $user_id, $course_id );
 			$course_title    = get_the_title( $course_id );
+			// Set default instructor name. This can be made dynamic later.
+			$instructor = 'Valerie Evans, BCBA-D';
 
 			$html .= sprintf(
-				'<div style="margin-bottom: 3mm;">%s<br><span style="font-size: 10pt; color: #666;">%s</span></div>',
+				'<div style="margin-bottom: %dmm;">
+					<div style="margin-bottom: %dmm;"><strong>Title:</strong> %s</div>
+					<div style="margin-bottom: %dmm;"><strong>Completion Date:</strong> %s</div>
+					<div style="margin-bottom: %dmm;"><strong>Instructor:</strong> %s</div>
+				</div>
+				<br>',
+				$course_margin,
+				$field_margin,
 				esc_html( $course_title ),
-				esc_html( $completion_date )
+				$field_margin,
+				esc_html( $completion_date ),
+				$field_margin,
+				esc_html( $instructor )
 			);
 		}
 
