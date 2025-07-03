@@ -1,0 +1,140 @@
+/**
+ * Admin styles for LearnDash Certificate Builder
+ */
+
+/* Settings Page Layout */
+.lcb-settings-section {
+    margin: 30px 0;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ccc;
+}
+
+.lcb-settings-section h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Image Upload Section */
+.lcb-image-upload {
+    margin: 1em 0;
+}
+
+.lcb-preview-image {
+    margin: 10px 0;
+    max-width: 300px;
+}
+
+.lcb-preview-image img {
+    max-width: 100%;
+    height: auto;
+}
+
+.lcb-remove-image {
+    margin-left: 10px !important;
+    color: #dc3232 !important;
+}
+
+/* Position Editor */
+.lcb-position-editor {
+    margin: 20px 0;
+}
+
+.lcb-canvas {
+    position: relative;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    margin: 20px 0;
+    overflow: hidden;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+}
+
+/* Add this to ensure canvas matches image dimensions */
+.lcb-canvas.has-background {
+    width: auto;
+    height: auto;
+    min-height: 0;
+}
+
+.lcb-canvas img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+.lcb-draggable-element {
+    position: absolute;
+    padding: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid #999;
+    cursor: move;
+    min-width: 80px;
+    font-size: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.lcb-draggable-element::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 4px;
+    background: red;
+    border-radius: 50%;
+}
+
+.lcb-element-label {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.lcb-element-coordinates {
+    margin-top: 5px;
+    font-size: 11px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.lcb-element-coordinates input {
+    width: 50px;
+    padding: 2px;
+}
+
+/* Helper Classes */
+.lcb-hidden {
+    display: none !important;
+}
+
+/* Save Button */
+.lcb-save-coordinates {
+    margin-top: 10px;
+    background: #0085ba;
+    border-color: #0073aa #006799 #006799;
+    color: #fff;
+    text-decoration: none;
+    text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799;
+    padding: 5px 15px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.lcb-save-coordinates:hover {
+    background: #008ec2;
+    border-color: #006799;
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 782px) {
+    .lcb-canvas {
+        width: 100%;
+        height: 400px;
+    }
+} 
