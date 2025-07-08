@@ -67,38 +67,10 @@ class CertificateGenerator {
 				$mpdf->SetDefaultBodyCSS( 'background-size', 'contain' );
 			}
 
-			// Add user name with larger font.
-			$user_name = $this->data_retriever->get_user_display_name( $user_id );
-			if ( $user_name && isset( $coordinates['user_name'] ) ) {
-				// Get font settings for username element.
-				$font_size      = isset( $coordinates['user_name']['font_size'] ) ? $coordinates['user_name']['font_size'] : 24;
-				$font_family    = isset( $coordinates['user_name']['font_family'] ) ? $coordinates['user_name']['font_family'] : 'Arial';
-				$text_transform = isset( $coordinates['user_name']['text_transform'] ) ? $coordinates['user_name']['text_transform'] : 'none';
-
-				$style = sprintf(
-					'font-family: %s; font-size: %spt; text-transform: %s; font-weight: bold;',
-					esc_attr( $font_family ),
-					esc_attr( $font_size ),
-					esc_attr( $text_transform )
-				);
-
-				$user_name_html = sprintf( '<div style="%s">%s</div>', $style, esc_html( $user_name ) );
-				$this->add_element( $mpdf, $user_name_html, $coordinates['user_name'] );
-			}
-
 			// Add formatted course list to certificate.
 			if ( isset( $coordinates['course_list'] ) ) {
-				$course_list = $this->get_formatted_course_list( $user_id, $course_ids );
-				$this->add_element( $mpdf, $course_list, $coordinates['course_list'] );
-			}
-
-			// Add signature if available.
-			$signature_id = get_option( 'lcb_signature_image' );
-			if ( $signature_id && isset( $coordinates['signature'] ) ) {
-				$signature_url = wp_get_attachment_url( $signature_id );
-				if ( $signature_url ) {
-					$this->add_image( $mpdf, $signature_url, $coordinates['signature'] );
-				}
+				$course_entries = $this->get_formatted_course_list( $user_id, $course_ids );
+				$this->add_course_list( $mpdf, $course_entries, $coordinates['course_list'], $user_id );
 			}
 
 			return $mpdf->Output( '', 'S' );
@@ -134,16 +106,22 @@ class CertificateGenerator {
 		}
 
 		$config = array(
-			'mode'          => 'utf-8',
-			'format'        => $format,
-			'margin_left'   => 0,
-			'margin_right'  => 0,
-			'margin_top'    => 0,
-			'margin_bottom' => 0,
-			'tempDir'       => wp_upload_dir()['basedir'] . '/mpdf',
-			'dpi'           => 96,
-			'img_dpi'       => 96,
-			'pdf_unit'      => 'mm',
+			'mode'                     => 'utf-8',
+			'format'                   => $format,
+			'margin_left'              => 0,
+			'margin_right'             => 0,
+			'margin_top'               => 0,
+			'margin_bottom'            => 0,
+			'tempDir'                  => wp_upload_dir()['basedir'] . '/mpdf',
+			'dpi'                      => 96,
+			'img_dpi'                  => 96,
+			'pdf_unit'                 => 'mm',
+			// Add settings for multi-page support.
+			'autoPageBreak'            => true,
+			'setAutoTopMargin'         => 'stretch',
+			'setAutoBottomMargin'      => 'stretch',
+			'useFixedNormalLineHeight' => true,
+			'adjustFontDescLineheight' => 1.5,
 		);
 
 		// Create temp directory if it doesn't exist.
@@ -157,11 +135,26 @@ class CertificateGenerator {
 		$mpdf->WriteHTML(
 			'
 			<style>
-				body { margin: 0; padding: 0; }
-				.certificate-element { font-family: Arial, sans-serif; }
+				body { 
+					margin: 0; 
+					padding: 0;
+				}
+				.certificate-element { 
+					font-family: Arial, sans-serif; 
+				}
+				.course-list {
+					page-break-inside: avoid;
+					margin-bottom: 10mm;
+				}
 			</style>
 		'
 		);
+
+		// Set page margins after initialization for more control.
+		$mpdf->SetMargins( 0, 0, 0, 0 );
+
+		// Enable automatic page breaks.
+		$mpdf->SetAutoPageBreak( true, 0 );
 
 		return $mpdf;
 	}
@@ -213,7 +206,7 @@ class CertificateGenerator {
 	 *
 	 * @param int   $user_id User ID.
 	 * @param array $course_ids Array of course IDs.
-	 * @return string Formatted course list HTML.
+	 * @return array Array of course entries.
 	 */
 	private function get_formatted_course_list( $user_id, $course_ids ) {
 		// Get font settings from coordinates.
@@ -236,32 +229,127 @@ class CertificateGenerator {
 			esc_attr( $text_transform )
 		);
 
-		$html = sprintf( '<div class="certificate-element" style="%s">', $style );
+		// Return array of course entries instead of single HTML string.
+		$course_entries = array();
 
 		foreach ( $course_ids as $course_id ) {
 			$completion_date = $this->data_retriever->get_course_completion_date( $user_id, $course_id );
 			$course_title    = get_the_title( $course_id );
-			// Set default instructor name. This can be made dynamic later.
-			$instructor = 'Valerie Evans, BCBA-D';
+			$instructor      = 'Valerie Evans, BCBA-D';
 
-			$html .= sprintf(
-				'<div style="margin-bottom: %dmm;">
-					<div style="margin-bottom: %dmm;"><strong>Title:</strong> %s</div>
-					<div style="margin-bottom: %dmm;"><strong>Completion Date:</strong> %s</div>
-					<div style="margin-bottom: %dmm;"><strong>Instructor:</strong> %s</div>
-				</div>
-				<br>',
-				$course_margin,
-				$field_margin,
-				esc_html( $course_title ),
-				$field_margin,
-				esc_html( $completion_date ),
-				$field_margin,
-				esc_html( $instructor )
+			$course_entries[] = array(
+				'html'   => sprintf(
+					'<div class="certificate-element" style="%s">
+						<div style="margin-bottom: %dmm;">
+							<div style="margin-bottom: %dmm;"><strong>Title:</strong> %s</div>
+							<div style="margin-bottom: %dmm;"><strong>Completion Date:</strong> %s</div>
+							<div style="margin-bottom: %dmm;"><strong>Instructor:</strong> %s</div>
+						</div>
+					</div>',
+					$style,
+					$course_margin,
+					$field_margin,
+					esc_html( $course_title ),
+					$field_margin,
+					esc_html( $completion_date ),
+					$field_margin,
+					esc_html( $instructor )
+				),
+				'height' => $course_margin + ( $field_margin * 3 ) + ( round( $font_size * 1.6 * 25.4 / 96 ) * 3 ), // Account for line-height and add extra padding.
 			);
 		}
 
-		$html .= '</div>';
-		return $html;
+		return $course_entries;
+	}
+
+	/**
+	 * Add course list to PDF with pagination
+	 *
+	 * @param Mpdf  $mpdf mPDF instance.
+	 * @param array $course_entries Array of course entries.
+	 * @param array $initial_position Initial position for course list.
+	 * @param int   $user_id User ID.
+	 */
+	private function add_course_list( $mpdf, $course_entries, $initial_position, $user_id ) {
+		// Convert initial position from pixels to mm.
+		$start_x = isset( $initial_position['x'] ) ? round( $initial_position['x'] * 25.4 / 96 ) : 0;
+		$start_y = isset( $initial_position['y'] ) ? round( $initial_position['y'] * 25.4 / 96 ) : 0;
+
+		$current_y     = $start_y;
+		$page_height   = $mpdf->h; // Get page height in mm.
+		$margin_bottom = 20; // Bottom margin in mm.
+
+		// Store coordinates for fixed elements.
+		$coordinates = $this->position_manager->get_coordinates( get_option( 'lcb_background_image' ) );
+		$user_name   = $this->data_retriever->get_user_display_name( $user_id );
+
+		// Get signature information.
+		$signature_id  = get_option( 'lcb_signature_image' );
+		$signature_url = $signature_id ? wp_get_attachment_url( $signature_id ) : false;
+
+		// Add fixed elements function.
+		$add_fixed_elements = function() use ( $mpdf, $coordinates, $user_name, $signature_url ) {
+			// Add username if coordinates exist.
+			if ( $user_name && isset( $coordinates['user_name'] ) ) {
+				$this->add_element( $mpdf, $this->format_user_name( $user_name, $coordinates['user_name'] ), $coordinates['user_name'] );
+			}
+
+			// Add signature if available and coordinates exist.
+			if ( $signature_url && isset( $coordinates['signature'] ) ) {
+				$this->add_image( $mpdf, $signature_url, $coordinates['signature'] );
+			}
+		};
+
+		// Add fixed elements to the first page before adding course entries.
+		$add_fixed_elements();
+
+		foreach ( $course_entries as $entry ) {
+			// Check if entry will fit on current page.
+			if ( ( $current_y + $entry['height'] ) > ( $page_height - $margin_bottom ) ) {
+				// Add new page.
+				$mpdf->AddPage();
+
+				// Add fixed elements to new page.
+				$add_fixed_elements();
+
+				// Reset Y position to starting position for new page.
+				$current_y = $start_y;
+			}
+
+			// Add the course entry at current position.
+			$html = sprintf(
+				'<div style="position: absolute; left: %dmm; top: %dmm;">%s</div>',
+				$start_x,
+				$current_y,
+				$entry['html']
+			);
+			$mpdf->WriteHTML( $html );
+
+			// Update Y position for next entry.
+			$current_y += $entry['height'];
+		}
+	}
+
+	/**
+	 * Format user name with custom styles
+	 *
+	 * @param string $user_name User name.
+	 * @param array  $position User name position.
+	 * @return string Formatted user name HTML.
+	 */
+	private function format_user_name( $user_name, $position ) {
+		// Get font settings for username element.
+		$font_size      = isset( $position['font_size'] ) ? $position['font_size'] : 24;
+		$font_family    = isset( $position['font_family'] ) ? $position['font_family'] : 'Arial';
+		$text_transform = isset( $position['text_transform'] ) ? $position['text_transform'] : 'none';
+
+		$style = sprintf(
+			'font-family: %s; font-size: %spt; text-transform: %s; font-weight: bold;',
+			esc_attr( $font_family ),
+			esc_attr( $font_size ),
+			esc_attr( $text_transform )
+		);
+
+		return sprintf( '<div style="%s">%s</div>', $style, esc_html( $user_name ) );
 	}
 }
