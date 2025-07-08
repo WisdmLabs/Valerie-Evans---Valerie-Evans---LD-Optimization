@@ -3,252 +3,215 @@
 ## Module 1: User Interface (UI) Module
 
 ### Purpose
-Provide the user interface for course selection and the rich HTML/CSS template editor.
+Provide the user interface for course selection and element positioning on certificates.
 
 ### Tasks
 
 #### Plugin Main File Setup
-1. Create the main plugin file (`your-plugin-name.php`)
+1. Create the main plugin file (`learndash-certificate-builder.php`)
 2. Define plugin header information
 3. Include necessary files for each module
+4. Enqueue required scripts and styles:
+   ```php
+   wp_enqueue_script('jquery-ui-draggable');
+   wp_enqueue_script('jquery-ui-droppable');
+   ```
 
-#### Admin Page/Shortcode Creation
-##### Option A (Frontend Shortcode)
-1. Hook into `init` action
-2. Use `add_shortcode()` to register a new shortcode
-3. Define the callback function for rendering the shortcode content
+#### Admin Settings Page
+1. Create admin menu under LearnDash
+2. Create settings sections:
+   - Background Image Management
+   - Signature Image Upload
+   - Element Position Editor
+   - Default Coordinate Settings
 
-#### HTML Form Structure
-1. In the UI rendering callback function, create an HTML form
-2. Add a hidden input field for WordPress nonce (`wp_nonce_field()`)
-3. For each completed LearnDash course:
-   - Display course title and completion date
-   - Add a checkbox input (`<input type="checkbox">`) with:
-     - `name="selected_course_ids[]"`
-     - `value="[course_id]"`
-4. Add template editor:
-   - Large textarea (`<textarea>`) for `certificate_html_template`
-   - Implement WordPress TinyMCE editor (`wp_editor()`)
-   - Provide clear instructions for placeholders:
-     - `{{user_name}}`
-     - `{{course_list}}`
-     - `{{completion_date}}`
-5. Add a "Generate Certificate" submit button
+#### Element Position Editor Interface
+1. Create the position editor template:
+   - Canvas area with background image
+   - Draggable elements for:
+     - User name
+     - Completion date
+     - Course list
+     - Signature
+   - Coordinate input fields for fine-tuning
+2. Implement drag-and-drop functionality:
+   ```javascript
+   $('.draggable-element').draggable({
+       containment: 'parent',
+       stop: function(event, ui) {
+           updateCoordinates($(this), ui.position);
+       }
+   });
+   ```
+3. Add coordinate save/update handlers:
+   ```javascript
+   function updateCoordinates(element, position) {
+       $.ajax({
+           url: ajaxurl,
+           method: 'POST',
+           data: {
+               action: 'save_element_coordinates',
+               element: element.data('type'),
+               x: position.left,
+               y: position.top,
+               background_id: currentBackgroundId
+           }
+       });
+   }
+   ```
 
-#### Form Submission Handling
-1. In the UI rendering callback, check for form submission (`$_POST` data)
-2. Security:
-   - Verify nonce using `check_admin_referer()` (admin page) or `wp_verify_nonce()` (front-end)
-   - If nonce check fails, use `wp_die()` or return error message
-3. Validate and sanitize inputs:
-   - Use `wp_kses_post()` for HTML/CSS template
-   - Consider custom whitelist for broader HTML tags
-   - Sanitize selected course IDs
-4. Pass collected and sanitized data to Certificate Generation Module
+#### Frontend Certificate Selection
+1. Create shortcode `[learndash_custom_certificate]`
+2. Implement course selection form:
+   - List completed courses with checkboxes
+   - Generate button
+   - Security nonce
+3. Handle form submission
 
 ## Module 2: Data Retrieval Module
 
 ### Purpose
-Fetch necessary dynamic data from LearnDash and WordPress.
+Fetch course completion and user data from LearnDash.
 
 ### Tasks
 
-#### Define Data Retrieval Class/Functions
+#### Define Data Retrieval Class
 1. Create `class-certificate-data-retriever.php`
-2. Define method `get_completed_courses($user_id)`:
+2. Implement course retrieval:
    ```php
    public function get_completed_courses($user_id) {
-       // Use LearnDash functions:
-       // - ld_get_user_courses_progress()
-       // - learndash_course_get_last_step_date_completed()
+       $courses = [];
+       $user_courses = learndash_user_get_enrolled_courses($user_id);
        
-       return [
-           [
-               'title' => 'Course A',
-               'date' => 'YYYY-MM-DD'
-           ],
-           // ...
-       ];
+       foreach ($user_courses as $course_id) {
+           if (learndash_course_completed($user_id, $course_id)) {
+               $courses[] = [
+                   'id' => $course_id,
+                   'title' => get_the_title($course_id),
+                   'completion_date' => learndash_course_get_completed_date($user_id, $course_id)
+               ];
+           }
+       }
+       return $courses;
    }
    ```
 
-3. Define method `get_user_details($user_id)`:
-   ```php
-   public function get_user_details($user_id) {
-       $user = get_user_by('ID', $user_id);
-       return [
-           'display_name' => $user->display_name,
-           // Add other relevant user info
-       ];
-   }
-   ```
-
-#### Integration with UI Module
-1. In UI module's rendering callback:
-   ```php
-   $courses = Certificate_Data_Retriever::get_completed_courses(
-       get_current_user_id()
-   );
-   ```
-2. In form submission handler:
-   ```php
-   $user_data = Certificate_Data_Retriever::get_user_details(
-       get_current_user_id()
-   );
-   ```
-
-## Module 3: Template Management Module
+## Module 3: Position Management Module
 
 ### Purpose
-Store, retrieve, and manage the editable HTML/CSS certificate template.
+Manage and store element coordinates for certificate generation.
 
 ### Tasks
 
-#### Define Template Manager Class/Functions
-1. Create `class-certificate-template-manager.php`
-2. Define save method:
+#### Define Position Manager Class
+1. Create `class-certificate-position-manager.php`
+2. Implement coordinate storage:
    ```php
-   public function save_template($template_content) {
-       // Option 1: WordPress Options API
-       return update_option(
-           'certificate_template_html',
-           wp_kses_post($template_content)
-       );
-       
-       // Option 2: Custom Post Type
-       return wp_insert_post([
-           'post_type' => 'certificate_template',
-           'post_content' => wp_kses_post($template_content),
-           'post_status' => 'publish'
-       ]);
+   public function save_coordinates($background_id, $coordinates) {
+       $all_coordinates = get_option('lcb_element_coordinates', []);
+       $all_coordinates[$background_id] = $coordinates;
+       return update_option('lcb_element_coordinates', $all_coordinates);
    }
    ```
-
-3. Define retrieve method:
+3. Implement coordinate retrieval:
    ```php
-   public function get_template() {
-       // Option 1: WordPress Options API
-       $template = get_option('certificate_template_html');
-       
-       // Option 2: Custom Post Type
-       $template = get_post(...);
-       
-       return $template ?: $this->get_default_template();
+   public function get_coordinates($background_id) {
+       $all_coordinates = get_option('lcb_element_coordinates', []);
+       return isset($all_coordinates[$background_id]) 
+           ? $all_coordinates[$background_id] 
+           : $this->get_default_coordinates();
    }
    ```
-
-#### Integration
-1. UI Module:
+4. Define default coordinates:
    ```php
-   // Pre-populate editor
-   $template = Template_Manager::get_template();
-   
-   // Save updated template
-   Template_Manager::save_template($_POST['certificate_html_template']);
+   private function get_default_coordinates() {
+       return [
+           'user_name' => ['x' => 300, 'y' => 200],
+           'completion_date' => ['x' => 300, 'y' => 400],
+           'course_list' => ['x' => 300, 'y' => 600],
+           'signature' => ['x' => 500, 'y' => 800]
+       ];
+   }
    ```
 
 ## Module 4: Certificate Generation Module
 
 ### Purpose
-Populate the HTML template with dynamic data and convert it into a PDF.
+Generate PDF certificates using mPDF with precise element positioning.
 
 ### Tasks
 
 #### PDF Library Integration
-1. **Recommended**: Install via Composer
+1. Install mPDF via Composer:
    ```bash
    composer require mpdf/mpdf
-   # or
-   composer require dompdf/dompdf
    ```
 
 #### Define Certificate Generator Class
 1. Create `class-certificate-generator.php`
-2. Define method:
+2. Initialize mPDF with custom configuration:
    ```php
-   public function generate_pdf(
-       $user_details,
-       $selected_course_details,
-       $html_template
-   )
-   ```
-
-#### Template Processing
-1. Placeholder Replacement:
-   ```php
-   private function replace_placeholders($template, $data) {
-       $template = str_replace(
-           '{{user_name}}',
-           $data['user_details']['display_name'],
-           $template
-       );
-       
-       $course_list = $this->generate_course_list(
-           $data['selected_course_details']
-       );
-       $template = str_replace(
-           '{{course_list}}',
-           $course_list,
-           $template
-       );
-       
-       return $template;
+   private function init_mpdf() {
+       $config = [
+           'mode' => 'utf-8',
+           'format' => 'A4-L',
+           'margin_left' => 0,
+           'margin_right' => 0,
+           'margin_top' => 0,
+           'margin_bottom' => 0
+       ];
+       return new \Mpdf\Mpdf($config);
    }
    ```
-
-2. Course List Generation:
+3. Implement certificate generation:
    ```php
-   private function generate_course_list($courses) {
-       $html = '<ul class="course-list">';
-       foreach ($courses as $course) {
-           $html .= sprintf(
-               '<li>%s - Completed: %s</li>',
-               esc_html($course['title']),
-               esc_html($course['date'])
-           );
+   public function generate_certificate($user_id, $course_ids, $background_id) {
+       $mpdf = $this->init_mpdf();
+       $coordinates = $this->position_manager->get_coordinates($background_id);
+       
+       // Add background
+       $background_url = wp_get_attachment_url($background_id);
+       $mpdf->SetDefaultBodyCSS('background', "url($background_url)");
+       $mpdf->SetDefaultBodyCSS('background-image-resize', 6);
+       
+       // Add elements using coordinates
+       foreach ($coordinates as $element => $pos) {
+           $content = $this->get_element_content($element, $user_id, $course_ids);
+           $mpdf->WriteFixedPosHTML($content, $pos['x'], $pos['y'], 50, 50);
        }
-       $html .= '</ul>';
-       return $html;
+       
+       return $mpdf->Output('', 'S');
    }
    ```
-
-#### PDF Generation
-```php
-public function create_pdf($populated_html) {
-    // Using mPDF
-    $mpdf = new \Mpdf\Mpdf();
-    $mpdf->WriteHTML($populated_html);
-    return $mpdf->Output('', 'S');
-    
-    // Or using Dompdf
-    $dompdf = new Dompdf();
-    $dompdf->loadHtml($populated_html);
-    $dompdf->render();
-    return $dompdf->output();
-}
-```
 
 ## Module 5: Download Management Module
 
 ### Purpose
-Deliver the generated PDF file to the user's browser.
+Deliver the generated PDF certificate to the user's browser.
 
 ### Tasks
 
-#### Define Downloader Class
+#### Define Download Handler Class
 1. Create `class-certificate-downloader.php`
-2. Define method:
+2. Implement download method:
    ```php
-   public function download_pdf($pdf_output_stream, $filename) {
-       ob_clean();
+   public function download_certificate($pdf_output, $filename) {
+       if (headers_sent()) {
+           return false;
+       }
        
        header('Content-Type: application/pdf');
        header('Content-Disposition: attachment; filename="' . $filename . '"');
-       header('Content-Length: ' . strlen($pdf_output_stream));
        header('Cache-Control: private, max-age=0, must-revalidate');
-       header('Pragma: public');
        
-       echo $pdf_output_stream;
+       echo $pdf_output;
        exit;
    }
    ```
+
+#### Error Handling
+1. Implement error checks:
+   - Verify PDF generation success
+   - Check file size limits
+   - Handle timeout scenarios
+2. Add user feedback for download status

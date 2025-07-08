@@ -5,49 +5,72 @@ This method offers greater flexibility in certificate design by leveraging the p
 
 ## Implementation Details
 
-### User Interface (Frontend/Backend)
-- Create a page for course selection with checkboxes for completed LearnDash courses
-- Provide advanced template editor:
-  - Large textarea or integrated TinyMCE editor
-  - Direct HTML and CSS editing capabilities
-  - Support for template placeholders:
-    - `{{user_name}}`
-    - `{{course_list}}`
-    - `{{header_text}}`
-- Include "Generate Certificate" button for conversion
+### Admin Interface (Backend)
+- Create a settings page under LearnDash menu:
+  - Certificate Background Settings:
+    - Upload/select background image for certificate template
+    - Image guidelines and recommended dimensions
+    - Preview of selected background
+  - Signature Settings:
+    - Upload/select signature image
+    - Option to adjust signature size and position
+    - Preview of signature placement
+  - Element Position Management:
+    - Visual drag-and-drop interface for positioning elements
+    - Real-time preview with background image
+    - Fine-tuning controls with numerical inputs
+    - Coordinate storage per background image
+    - Elements to position:
+      - User name
+      - Completion date
+      - Course list
+      - Signature
+- Store settings using WordPress Options API for:
+  - Background image ID
+  - Signature image ID
+  - Element coordinates for each background
+
+### User Interface (Frontend)
+- Implement a shortcode `[learndash_custom_certificate]` that displays:
+  - List of user's completed LearnDash courses with checkboxes
+  - Each course displayed with:
+    - Course title
+    - Checkbox for selection
+  - "Generate Certificate" button to create certificates for selected courses
+- Keep interface simple and user-friendly
+- Support for multiple course selection
 
 ### Certificate Generation Logic (PHP)
 1. **Data Collection**:
    - Process form submission
    - Retrieve selected course data from LearnDash
-   - Fetch stored HTML/CSS template
+   - Get stored background and signature images
+   - Fetch stored element coordinates for current background
 
 2. **Template Processing**:
-   - Replace placeholders with dynamic data:
-     - User's name
-     - Formatted course list (HTML `<ul>` or `<table>`)
-     - Custom header/footer content
-   - Generate complete HTML document
+   - Apply background image from admin settings
+   - Position elements using stored coordinates:
+     - Place user name at specified position
+     - Position completion date
+     - Layout course list according to coordinates
+     - Add signature at configured location
+   - Generate complete PDF document
 
-3. **PDF Conversion**:
-   - Use HTML-to-PDF library (mPDF or Dompdf)
-   - Convert processed HTML/CSS to PDF
+3. **PDF Generation**:
+   - Use PDF library (TCPDF or similar)
+   - Apply background image as base layer
+   - Position text elements using stored coordinates
    - Stream generated PDF to user's browser
 
 ### Content Storage
-- Store complete HTML/CSS template:
-  ```php
-  // Option 1: WordPress Options API
-  update_option('certificate_template_html', $template);
-  
-  // Option 2: Custom Post Type
-  wp_insert_post([
-    'post_type' => 'certificate_template',
-    'post_content' => $template,
-    'post_status' => 'publish'
-  ]);
-  ```
+- Store media assets and configuration:
+  - Background images in media library
+  - Signature images in media library
+  - Element coordinates in wp_options
+  - One coordinate set per background image
 - Enables comprehensive control over:
+  - Certificate background
+  - Element positioning
+  - Signature placement
   - Visual presentation
-  - Content structure
-  - Template variations
+  - Layout consistency

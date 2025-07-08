@@ -3,54 +3,59 @@
 ## Module 1: User Interface (UI) Module
 
 ### Purpose
-To present an interface for selecting completed LearnDash courses and providing a rich editor for the certificate's HTML/CSS template.
+To present an interface for selecting completed LearnDash courses and managing certificate element positioning.
 
 ### Key Components/Files
 - `class-certificate-ui.php`: Handles UI rendering and form processing
 - `templates/certificate-selection-form.php`: HTML structure for course selection
-- `templates/certificate-template-editor.php`: HTML for the template editing area
-- `js/certificate-ui.js`: Script for integrating TinyMCE or similar editor
-- `css/certificate-ui.css`: Styling for the form and editor
+- `templates/certificate-position-editor.php`: HTML for the element positioning interface
+- `js/certificate-ui.js`: Script for drag-and-drop positioning and coordinate management
+- `css/certificate-ui.css`: Styling for the form and positioning interface
 
 ### Inputs
 - Current User ID (from `wp_get_current_user()`)
 - List of completed LearnDash courses (from Data Retrieval Module)
-- Current HTML/CSS template content (from Template Management Module)
+- Background image ID and URL
+- Stored element coordinates
+- Signature image ID and URL
 
 ### Outputs
 HTTP POST request containing:
 - `selected_course_ids[]`: Array of selected course IDs
-- `certificate_html_template`: The updated HTML/CSS content for the certificate
+- `element_coordinates`: JSON object containing position data for each element
 - WordPress nonce for security validation
 
 ### Dependencies
-- WordPress Core (for admin pages/shortcodes, TinyMCE integration)
+- WordPress Core (for admin pages/shortcodes, Media Library)
 - Data Retrieval Module (to populate course list)
-- Template Management Module (to pre-fill editor with current template)
+- jQuery UI (for draggable functionality)
 
 ### Technical Considerations
-1. **HTML Editor Integration**:
-   - Integrate a robust HTML editor (e.g., TinyMCE, CodeMirror, or a simple textarea)
-   - Allow administrators to write/paste HTML and CSS
-   - Provide clear instructions on using placeholders (e.g., `{{user_name}}`, `{{course_list}}`)
+1. **Element Position Management**:
+   - Implement drag-and-drop interface using jQuery UI
+   - Store coordinates relative to background image dimensions
+   - Provide numerical input for fine-tuning coordinates
+   - Real-time preview of element positions
 
 2. **Security**:
-   - Implement strong nonce verification (`wp_nonce_field()`, `check_admin_referer()`)
-   - Prevent CSRF attacks
+   - Implement strong nonce verification
+   - Validate coordinate values
+   - Sanitize all inputs
 
-3. **Input Sanitization**:
-   - Sanitize and escape all user-provided HTML/CSS
-   - Prevent XSS vulnerabilities
-   - Be careful with raw HTML input
+3. **Media Management**:
+   - Integrate with WordPress Media Library
+   - Handle image uploads and selection
+   - Preview uploaded images
 
 4. **User Experience**:
-   - Clearly explain available placeholders
-   - Provide example HTML/CSS templates
+   - Clear visual feedback during drag-and-drop
+   - Intuitive interface for position adjustment
+   - Responsive preview area
 
 ## Module 2: Data Retrieval Module
 
 ### Purpose
-To abstract and encapsulate all data fetching operations from LearnDash.
+To fetch course completion data and user information from LearnDash.
 
 ### Key Components/Files
 - `class-certificate-data-retriever.php`: Contains methods for fetching data
@@ -73,145 +78,129 @@ get_user_display_name( $user_id ):
 ```
 
 ### Dependencies
-- LearnDash Plugin (its internal functions for user course progress and completion status)
-- WordPress Core (for `get_user_by`, `get_post`)
+- LearnDash Plugin
+- WordPress Core
 
 ### Technical Considerations
-1. **LearnDash API**:
-   - Use LearnDash's official functions (`ld_get_user_courses_progress`, `learndash_course_get_last_step_date_completed()`)
-   - Prioritize compatibility and future-proofing
+1. **LearnDash Integration**:
+   - Use LearnDash's official functions
+   - Handle course completion status and dates
+   - Retrieve course metadata
 
 2. **Performance**:
-   - Optimize database queries for efficiency
-   - Handle large numbers of courses/users
+   - Optimize database queries
+   - Cache results where appropriate
+   - Handle large course lists efficiently
 
-3. **Error Handling**:
-   - Implement robust error handling
-   - Handle missing or incomplete course data
-
-## Module 3: Template Management Module
+## Module 3: Position Management Module
 
 ### Purpose
-To handle the storage, retrieval, and management of the editable HTML and CSS template used for certificate generation.
+To handle the storage and retrieval of element coordinates for certificate generation.
 
 ### Key Components/Files
-- `class-certificate-template-manager.php`: Methods for template operations
+- `class-certificate-position-manager.php`: Methods for coordinate operations
 
 ### Inputs
-- `template_content`: The raw HTML/CSS string for the certificate
+- `background_id`: The ID of the certificate background image
+- `element_coordinates`: Array of position data for each element
 
 ### Outputs
 ```php
-save_template( $template_content ):
-    Saves the content, returns boolean for success
+save_coordinates($background_id, $coordinates):
+    Saves the coordinate set for a specific background
 
-get_template():
-    Retrieves the current template content
+get_coordinates($background_id):
+    Retrieves coordinates for the specified background
 ```
 
 ### Dependencies
-- WordPress Core (Options API: `update_option()`, `get_option()`)
+- WordPress Core (Options API)
 
 ### Technical Considerations
-1. **Storage Location**:
-   - Consider using custom post type's meta field (`update_post_meta()`)
-   - Alternative: Custom database table for versioning
-   - Avoid `wp_option()` for large templates
+1. **Coordinate Storage**:
+   - Store coordinates per background image
+   - Handle multiple coordinate sets
+   - Maintain default positions
 
-2. **Sanitization**:
-   - Re-sanitize/validate inputs before saving
-   - Implement multiple layers of validation
+2. **Validation**:
+   - Validate coordinate ranges
+   - Ensure all required elements have positions
+   - Handle missing or invalid data
 
-3. **Default Template**:
-   - Provide robust default HTML/CSS template
-   - Ensure working certificate without custom template
-
-4. **Versioning** (Advanced):
-   - Consider implementing template versioning
-   - Allow rollbacks if needed
+3. **Default Handling**:
+   - Provide fallback positions
+   - Initialize new backgrounds with defaults
 
 ## Module 4: Certificate Generation Module
 
 ### Purpose
-The core engine for populating the HTML template with dynamic data and converting it into a PDF document.
+Generate PDF certificates using mPDF with precise element positioning.
 
 ### Key Components/Files
-- `class-certificate-generator.php`: Main class orchestrating the process
-- `vendor/mpdf/mpdf/src/Mpdf.php` (or `dompdf/dompdf/src/Dompdf.php`): Third-party HTML-to-PDF library
+- `class-certificate-generator.php`: Main class for PDF generation
+- `vendor/mpdf/mpdf`: mPDF library integration
 
 ### Inputs
-- `user_display_name`: The name of the certificate recipient
-- `selected_course_details`: Array of course data (title, completion date)
-- `certificate_html_template`: The raw HTML/CSS template string
+- `user_display_name`: Certificate recipient's name
+- `selected_course_details`: Array of course data
+- `background_image`: Certificate background image
+- `signature_image`: Signature image
+- `element_coordinates`: Position data for all elements
 
 ### Outputs
-A generated PDF file stream (raw binary data)
+A generated PDF file stream using mPDF
 
 ### Dependencies
-- Data Retrieval Module (for course and user data)
-- Template Management Module (for the HTML/CSS template)
-- mPDF or Dompdf Library
+- mPDF Library
+- Data Retrieval Module
+- Position Management Module
 
 ### Technical Considerations
-1. **Placeholder Replacement**:
-   - Implement robust string replacement
-   - Use `str_replace()` or regex-based replacement
-   - Handle `{{user_name}}`, `{{course_list}}`, etc.
+1. **mPDF Configuration**:
+   - Set up custom page size and margins
+   - Configure font settings
+   - Handle background image placement
 
-2. **Dynamic Course List Rendering**:
-   - Generate HTML snippets for course lists
-   - Support both `<ul>` and `<table>` formats
+2. **Element Positioning**:
+   - Use mPDF's WriteFixedPosHTML for text elements
+   - Position images with exact coordinates
+   - Handle different page orientations
 
-3. **HTML/CSS Compatibility**:
-   - Test complex layouts thoroughly
-   - Be aware of PDF library limitations
-   - Limited support for modern CSS features
+3. **Resource Management**:
+   - Optimize image handling
+   - Manage font resources
+   - Control PDF file size
 
-4. **Resource Handling**:
-   - Resolve image paths correctly
-   - Support absolute URLs for resources
-
-5. **Memory & Performance**:
-   - Optimize included images
-   - Reduce memory footprint
-   - Monitor generation time
-
-6. **Error Handling**:
-   - Implement try-catch blocks
-   - Handle conversion errors gracefully
+4. **Error Handling**:
+   - Handle PDF generation errors
+   - Validate all inputs before processing
+   - Provide meaningful error messages
 
 ## Module 5: Download Management Module
 
 ### Purpose
-To correctly set HTTP headers and serve the generated PDF file to the user's browser for download.
+To serve the generated PDF certificate to the user's browser.
 
 ### Key Components/Files
 - `class-certificate-downloader.php`: Handles the download process
 
 ### Inputs
-- `pdf_output_stream`: The raw PDF data generated by the Certificate Generation Module
-- `filename`: The desired filename for the downloaded certificate
+- `pdf_output`: The generated PDF from mPDF
+- `filename`: The desired filename for the certificate
 
 ### Outputs
-HTTP headers and binary PDF data:
-```php
-header('Content-Type: application/pdf')
-header('Content-Disposition: attachment; filename="' . $filename . '"')
-header('Content-Length: ' . strlen($pdf_output_stream))
-```
+HTTP headers and PDF file for download
 
 ### Dependencies
 - Certificate Generation Module
 
 ### Technical Considerations
-1. **Header Control**:
-   - Set correct headers for PDF download
-   - Ensure proper content type and disposition
+1. **File Delivery**:
+   - Set appropriate HTTP headers
+   - Handle large file downloads
+   - Clean output buffer
 
-2. **Output Buffering**:
-   - Use `ob_clean()` when needed
-   - Prevent unwanted output
-
-3. **Script Termination**:
-   - Call `exit;` after sending file
-   - Prevent interference with download
+2. **Error Handling**:
+   - Handle download interruptions
+   - Provide download feedback
+   - Clean up temporary files
