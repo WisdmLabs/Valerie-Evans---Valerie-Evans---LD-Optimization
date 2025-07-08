@@ -20,7 +20,7 @@ class DataRetriever {
 	 */
 	public function get_completed_courses( $user_id ) {
 		$courses      = array();
-		$user_courses = learndash_user_get_enrolled_courses( $user_id );
+		$user_courses = learndash_get_user_courses_from_meta( $user_id );
 
 		foreach ( $user_courses as $course_id ) {
 			if ( learndash_course_completed( $user_id, $course_id ) ) {
