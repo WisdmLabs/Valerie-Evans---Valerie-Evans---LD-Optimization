@@ -88,6 +88,7 @@ class LearnDash_Certificate_Builder {
 
 		// Frontend hooks.
 		add_action( 'wp_ajax_lcb_generate_certificate', array( $this, 'handle_generate_certificate' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
 		add_shortcode( 'learndash_custom_certificate', array( $this, 'render_certificate_form' ) );
 	}
 
@@ -183,6 +184,48 @@ class LearnDash_Certificate_Builder {
 	}
 
 	/**
+	 * Enqueue frontend assets
+	 */
+	public function enqueue_frontend_assets() {
+		// Only enqueue if shortcode is present.
+		global $post;
+		if ( ! is_a( $post, 'WP_Post' ) || ! has_shortcode( $post->post_content, 'learndash_custom_certificate' ) ) {
+			return;
+		}
+
+		wp_enqueue_style(
+			'lcb-frontend',
+			LCB_PLUGIN_URL . 'assets/css/frontend-certificate.css',
+			array(),
+			LCB_VERSION
+		);
+
+		wp_enqueue_script(
+			'lcb-frontend',
+			LCB_PLUGIN_URL . 'assets/js/frontend-certificate.js',
+			array( 'jquery' ),
+			LCB_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'lcb-frontend',
+			'lcb_frontend',
+			array(
+				'ajaxurl'              => admin_url( 'admin-ajax.php' ),
+				'nonce'                => wp_create_nonce( 'lcb_generate_nonce' ),
+				'select_course'        => __( 'Please select at least one course.', 'learndash-certificate-builder' ),
+				'generating'           => __( 'Generating...', 'learndash-certificate-builder' ),
+				'popup_blocked'        => __( 'Pop-up blocked. Please allow pop-ups and try again.', 'learndash-certificate-builder' ),
+				'success'              => __( 'Certificate generated successfully!', 'learndash-certificate-builder' ),
+				'generation_failed'    => __( 'Failed to generate certificate. Please try again.', 'learndash-certificate-builder' ),
+				'connection_failed'    => __( 'Failed to connect to server. Please check your network connection and try again.', 'learndash-certificate-builder' ),
+				'generate_certificate' => __( 'Generate Certificate', 'learndash-certificate-builder' ),
+			)
+		);
+	}
+
+	/**
 	 * Handle AJAX request to generate certificate
 	 */
 	public function handle_generate_certificate() {
@@ -248,18 +291,24 @@ class LearnDash_Certificate_Builder {
 	 * @return string Form HTML.
 	 */
 	public function render_certificate_form() {
+		// Get completed courses for current user.
 		$user_id = get_current_user_id();
 		if ( ! $user_id ) {
-			return '<p>' . esc_html__( 'Please log in to generate certificates.', 'learndash-certificate-builder' ) . '</p>';
+			return esc_html__( 'Please log in to generate certificates.', 'learndash-certificate-builder' );
 		}
 
 		$completed_courses = $this->data_retriever->get_completed_courses( $user_id );
 		if ( empty( $completed_courses ) ) {
-			return '<p>' . esc_html__( 'You have not completed any courses yet.', 'learndash-certificate-builder' ) . '</p>';
+			return esc_html__( 'You have not completed any courses yet.', 'learndash-certificate-builder' );
 		}
 
+		// Start output buffering.
 		ob_start();
+
+		// Include the template.
 		include LCB_PLUGIN_DIR . 'templates/frontend/certificate-form.php';
+
+		// Return the buffered content.
 		return ob_get_clean();
 	}
 

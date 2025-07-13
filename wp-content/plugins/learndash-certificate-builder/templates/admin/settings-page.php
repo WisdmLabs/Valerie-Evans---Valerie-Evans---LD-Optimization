@@ -74,10 +74,8 @@ if ( $background_id ) {
 		settings_fields( 'lcb_settings' );
 		wp_nonce_field( 'lcb_admin_nonce', 'lcb_nonce' );
 		?>
-		
 		<!-- Hidden input to preserve coordinates. -->
 		<input type="hidden" name="lcb_element_coordinates" value="<?php echo esc_attr( wp_json_encode( $form_coordinates ) ); ?>">
-		
 		<div class="lcb-settings-section">
 			<h2><?php esc_html_e( 'Background Image', 'learndash-certificate-builder' ); ?></h2>
 			<div class="lcb-image-upload">
@@ -131,10 +129,7 @@ if ( $background_id ) {
 							'y' => 0,
 						);
 						?>
-						<div class="lcb-draggable-element" 
-							 id="element-<?php echo esc_attr( $element_id ); ?>"
-							 data-element="<?php echo esc_attr( $element_id ); ?>"
-							 style="left: <?php echo esc_attr( $pos['x'] ); ?>px; top: <?php echo esc_attr( $pos['y'] ); ?>px;">
+						<div class="lcb-draggable-element" id="element-<?php echo esc_attr( $element_id ); ?>" data-element="<?php echo esc_attr( $element_id ); ?>" style="left: <?php echo esc_attr( $pos['x'] ); ?>px; top: <?php echo esc_attr( $pos['y'] ); ?>px;">
 							<div class="lcb-element-label"><?php echo esc_html( $element_label ); ?></div>
 							<div class="lcb-element-coordinates">
 								X: <input type="number" class="lcb-x-coordinate" value="<?php echo esc_attr( $pos['x'] ); ?>">
@@ -198,90 +193,3 @@ if ( $background_id ) {
 		<?php submit_button( __( 'Save Changes', 'learndash-certificate-builder' ) ); ?>
 	</form>
 </div>
-
-<script>
-// Initialize admin object with necessary data.
-var lcb_admin = {
-	ajaxurl: '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>',
-	nonce: '<?php echo esc_js( wp_create_nonce( 'lcb_admin_nonce' ) ); ?>'
-};
-</script>
-
-<style>
-.lcb-position-editor {
-	margin: 20px 0;
-}
-
-.lcb-canvas {
-	position: relative;
-	width: 800px;
-	height: 600px;
-	border: 1px solid #ccc;
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: center;
-}
-
-.lcb-draggable-element {
-	position: absolute;
-	padding: 10px;
-	background: rgba(255, 255, 255, 0.9);
-	border: 1px solid #999;
-	cursor: move;
-	min-width: 100px;
-}
-
-.lcb-element-coordinates {
-	margin-top: 5px;
-	font-size: 12px;
-}
-
-.lcb-element-coordinates input {
-	width: 60px;
-	margin: 0 5px;
-}
-
-.lcb-element-styles {
-	margin-top: 10px;
-	padding: 8px;
-	background: #fff;
-	border: 1px solid #e5e5e5;
-	border-radius: 3px;
-}
-
-.lcb-style-control {
-	margin-bottom: 8px;
-}
-
-.lcb-style-control:last-child {
-	margin-bottom: 0;
-}
-
-.lcb-style-control label {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.lcb-style-input {
-	flex: 1;
-	min-width: 0;
-}
-
-.lcb-preview-image {
-	margin: 10px 0;
-	max-width: 300px;
-}
-
-.lcb-preview-image img {
-	max-width: 100%;
-	height: auto;
-}
-
-.lcb-settings-section {
-	margin: 30px 0;
-	padding: 20px;
-	background: #fff;
-	border: 1px solid #ccc;
-}
-</style> 

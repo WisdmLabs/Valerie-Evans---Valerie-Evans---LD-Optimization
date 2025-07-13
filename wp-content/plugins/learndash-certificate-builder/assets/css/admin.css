@@ -131,6 +131,34 @@
     border-color: #006799;
 }
 
+/* Element Styles */
+.lcb-element-styles {
+    margin-top: 10px;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+}
+
+.lcb-style-control {
+    margin-bottom: 8px;
+}
+
+.lcb-style-control:last-child {
+    margin-bottom: 0;
+}
+
+.lcb-style-control label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.lcb-style-input {
+    flex: 1;
+    min-width: 0;
+}
+
 /* Responsive Adjustments */
 @media screen and (max-width: 782px) {
     .lcb-canvas {
