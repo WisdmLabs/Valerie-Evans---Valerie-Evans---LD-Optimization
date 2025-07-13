@@ -17,7 +17,7 @@ class PositionManager {
 	 *
 	 * @var string
 	 */
-	private const COORDINATES_OPTION = 'lcb_element_coordinates';
+	private $coordinates_option = 'lcb_element_coordinates';
 
 	/**
 	 * Save coordinates for a specific background
@@ -31,10 +31,10 @@ class PositionManager {
 			return false;
 		}
 
-		$all_coordinates                   = get_option( self::COORDINATES_OPTION, array() );
+		$all_coordinates                   = get_option( $this->coordinates_option, array() );
 		$all_coordinates[ $background_id ] = $coordinates;
 
-		return update_option( self::COORDINATES_OPTION, $all_coordinates );
+		return update_option( $this->coordinates_option, $all_coordinates );
 	}
 
 	/**
@@ -44,7 +44,7 @@ class PositionManager {
 	 * @return array Array of element coordinates.
 	 */
 	public function get_coordinates( $background_id ) {
-		$all_coordinates = get_option( self::COORDINATES_OPTION, array() );
+		$all_coordinates = get_option( $this->coordinates_option, array() );
 		return isset( $all_coordinates[ $background_id ] )
 			? $all_coordinates[ $background_id ]
 			: $this->get_default_coordinates();
@@ -82,18 +82,18 @@ class PositionManager {
 	private function validate_coordinates( $coordinates ) {
 		$required_elements = array( 'user_name', 'course_list', 'signature' );
 
-		// Check if all required elements exist
+		// Check if all required elements exist.
 		foreach ( $required_elements as $element ) {
 			if ( ! isset( $coordinates[ $element ] ) ) {
 				return false;
 			}
 
-			// Check if x and y coordinates exist for each element
+			// Check if x and y coordinates exist for each element.
 			if ( ! isset( $coordinates[ $element ]['x'] ) || ! isset( $coordinates[ $element ]['y'] ) ) {
 				return false;
 			}
 
-			// Validate coordinate values
+			// Validate coordinate values.
 			if ( ! is_numeric( $coordinates[ $element ]['x'] ) || ! is_numeric( $coordinates[ $element ]['y'] ) ) {
 				return false;
 			}

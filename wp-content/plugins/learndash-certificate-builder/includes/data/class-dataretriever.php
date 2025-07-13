@@ -19,10 +19,25 @@ class DataRetriever {
 	 * @return array Array of completed courses with details.
 	 */
 	public function get_completed_courses( $user_id ) {
+		// Validate user ID.
+		$user_id = absint( $user_id );
+		if ( ! $user_id || ! get_user_by( 'id', $user_id ) ) {
+			return array();
+		}
+
 		$courses      = array();
 		$user_courses = learndash_get_user_courses_from_meta( $user_id );
 
+		if ( ! is_array( $user_courses ) ) {
+			return array();
+		}
+
 		foreach ( $user_courses as $course_id ) {
+			$course_id = absint( $course_id );
+			if ( ! $course_id || ! get_post( $course_id ) ) {
+				continue;
+			}
+
 			if ( learndash_course_completed( $user_id, $course_id ) ) {
 				$courses[] = array(
 					'id'              => $course_id,
@@ -42,8 +57,18 @@ class DataRetriever {
 	 * @return string User's display name.
 	 */
 	public function get_user_display_name( $user_id ) {
+		// Validate user ID.
+		$user_id = absint( $user_id );
+		if ( ! $user_id ) {
+			return '';
+		}
+
 		$user = get_userdata( $user_id );
-		return $user ? $user->display_name : '';
+		if ( ! $user || ! is_a( $user, 'WP_User' ) ) {
+			return '';
+		}
+
+		return $user->display_name;
 	}
 
 	/**
@@ -54,8 +79,24 @@ class DataRetriever {
 	 * @return string Formatted completion date.
 	 */
 	public function get_course_completion_date( $user_id, $course_id ) {
+		// Validate user ID.
+		$user_id = absint( $user_id );
+		if ( ! $user_id || ! get_user_by( 'id', $user_id ) ) {
+			return '';
+		}
+
+		// Validate course ID.
+		$course_id = absint( $course_id );
+		if ( ! $course_id || ! get_post( $course_id ) || get_post_type( $course_id ) !== 'sfwd-courses' ) {
+			return '';
+		}
+
 		$completion_date = get_user_meta( $user_id, 'course_completed_' . $course_id, true );
-		return $completion_date ? date_i18n( get_option( 'date_format' ), $completion_date ) : '';
+		if ( ! $completion_date || ! is_numeric( $completion_date ) ) {
+			return '';
+		}
+
+		return date_i18n( get_option( 'date_format' ), $completion_date );
 	}
 
 	/**
@@ -87,6 +128,18 @@ class DataRetriever {
 	 * @return bool Whether the user has completed the course.
 	 */
 	public function has_completed_course( $user_id, $course_id ) {
+		// Validate user ID.
+		$user_id = absint( $user_id );
+		if ( ! $user_id || ! get_user_by( 'id', $user_id ) ) {
+			return false;
+		}
+
+		// Validate course ID.
+		$course_id = absint( $course_id );
+		if ( ! $course_id || ! get_post( $course_id ) || get_post_type( $course_id ) !== 'sfwd-courses' ) {
+			return false;
+		}
+
 		return learndash_course_completed( $user_id, $course_id );
 	}
 }

@@ -75,7 +75,6 @@ class CertificateGenerator {
 
 			return $mpdf->Output( '', 'S' );
 		} catch ( MpdfException $e ) {
-			error_log( 'LearnDash Certificate Builder - PDF Generation Error: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -167,7 +166,7 @@ class CertificateGenerator {
 	 * @param array  $position Element position.
 	 */
 	private function add_element( $mpdf, $content, $position ) {
-		// Convert position from pixels to mm
+		// Convert position from pixels to mm.
 		$x = isset( $position['x'] ) ? round( $position['x'] * 25.4 / 96 ) : 0;
 		$y = isset( $position['y'] ) ? round( $position['y'] * 25.4 / 96 ) : 0;
 
@@ -188,7 +187,7 @@ class CertificateGenerator {
 	 * @param array  $position Image position.
 	 */
 	private function add_image( $mpdf, $image_url, $position ) {
-		// Convert position from pixels to mm
+		// Convert position from pixels to mm.
 		$x = isset( $position['x'] ) ? round( $position['x'] * 25.4 / 96 ) : 0;
 		$y = isset( $position['y'] ) ? round( $position['y'] * 25.4 / 96 ) : 0;
 

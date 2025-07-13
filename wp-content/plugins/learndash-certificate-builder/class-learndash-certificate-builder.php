@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: WDM LearnDash Certificate Builder
- * Plugin URI: https://example.com/learndash-certificate-builder
+ * Plugin URI: https://wisdmlabs.com/learndash-certificate-builder
  * Description: Custom certificate builder for LearnDash courses
  * Version: 1.0.1
- * Author: Your Name
- * Author URI: https://example.com
+ * Author: Wisdmlabs
+ * Author URI: https://wisdmlabs.com
  * Text Domain: learndash-certificate-builder
  * Domain Path: /languages
  * Requires at least: 5.8
@@ -270,7 +270,7 @@ class LearnDash_Certificate_Builder {
 		// Save certificate for record keeping.
 		$saved_path = $this->certificate_downloader->save_certificate( $pdf_content, $filename );
 		if ( false === $saved_path ) {
-			error_log( 'Failed to save certificate: ' . $filename );
+			wp_send_json_error( 'Failed to save certificate.' );
 		}
 
 		// Download or stream the certificate based on request.

@@ -16,7 +16,6 @@ class Settings {
 	 */
 	public function __construct() {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
-		
 	}
 
 	/**
@@ -151,5 +150,5 @@ class Settings {
 		include LCB_PLUGIN_DIR . 'templates/admin/settings-page.php';
 	}
 
-	
+
 }

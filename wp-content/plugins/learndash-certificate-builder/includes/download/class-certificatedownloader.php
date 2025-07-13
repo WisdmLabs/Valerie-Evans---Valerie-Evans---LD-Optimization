@@ -30,26 +30,12 @@ class CertificateDownloader {
 		try {
 			// Check if headers are already sent.
 			if ( headers_sent( $filename, $line ) ) {
-				error_log(
-					sprintf(
-						'Headers already sent in %s on line %d',
-						$filename,
-						$line
-					)
-				);
 				return false;
 			}
 
 			// Check file size.
 			$content_length = strlen( $pdf_content );
 			if ( $content_length > self::MAX_FILE_SIZE ) {
-				error_log(
-					sprintf(
-						'Certificate file size (%d bytes) exceeds maximum allowed size (%d bytes)',
-						$content_length,
-						self::MAX_FILE_SIZE
-					)
-				);
 				return false;
 			}
 
@@ -85,7 +71,6 @@ class CertificateDownloader {
 			flush();
 			return true;
 		} catch ( \Exception $e ) {
-			error_log( 'Certificate download error: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -101,26 +86,12 @@ class CertificateDownloader {
 		try {
 			// Check if headers are already sent.
 			if ( headers_sent( $filename, $line ) ) {
-				error_log(
-					sprintf(
-						'Headers already sent in %s on line %d',
-						$filename,
-						$line
-					)
-				);
 				return false;
 			}
 
 			// Check file size.
 			$content_length = strlen( $pdf_content );
 			if ( $content_length > self::MAX_FILE_SIZE ) {
-				error_log(
-					sprintf(
-						'Certificate file size (%d bytes) exceeds maximum allowed size (%d bytes)',
-						$content_length,
-						self::MAX_FILE_SIZE
-					)
-				);
 				return false;
 			}
 
@@ -157,7 +128,6 @@ class CertificateDownloader {
 			flush();
 			return true;
 		} catch ( \Exception $e ) {
-			error_log( 'Certificate streaming error: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -201,13 +171,11 @@ class CertificateDownloader {
 			// Save file.
 			$result = file_put_contents( $file_path, $pdf_content );
 			if ( false === $result ) {
-				error_log( 'Failed to save certificate file: ' . $file_path );
 				return false;
 			}
 
 			return $file_path;
 		} catch ( \Exception $e ) {
-			error_log( 'Certificate save error: ' . $e->getMessage() );
 			return false;
 		}
 	}
@@ -224,7 +192,6 @@ class CertificateDownloader {
 			$upload_dir = wp_upload_dir();
 			$cert_dir   = $upload_dir['basedir'] . '/certificates';
 			if ( strpos( $file_path, $cert_dir ) !== 0 ) {
-				error_log( 'Invalid certificate file path: ' . $file_path );
 				return false;
 			}
 
@@ -236,7 +203,6 @@ class CertificateDownloader {
 			// Delete file.
 			return unlink( $file_path );
 		} catch ( \Exception $e ) {
-			error_log( 'Certificate deletion error: ' . $e->getMessage() );
 			return false;
 		}
 	}
