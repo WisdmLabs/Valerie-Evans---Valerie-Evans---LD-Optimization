@@ -61,5 +61,5 @@ if ( ! $background_id ) {
 
 		<div id="lcb-form-messages"></div>
 	</form>
-</div> 
+</div>
 
