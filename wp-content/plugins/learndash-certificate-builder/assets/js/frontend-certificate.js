@@ -1,10 +1,10 @@
 jQuery( document ).ready( function ( $ ) {
     $( '#lcb-generate-form' ).on( 'submit', function ( e ) {
         e.preventDefault();
-        var $form = $( this );
-        var $button = $form.find( 'button[type="submit"]' );
-        var $messages = $( '#lcb-form-messages' );
-        var stream_mode = $form.find( 'input[name="stream_mode"]:checked' ).val() === '1';
+        let $form = $( this );
+        let $button = $form.find( 'button[type="submit"]' );
+        let $messages = $( '#lcb-form-messages' );
+        let stream_mode = $form.find( 'input[name="stream_mode"]:checked' ).val() === '1';
 
         // Check if at least one course is selected
         if ( !$form.find( 'input[name="course_ids[]"]:checked' ).length ) {
@@ -24,14 +24,14 @@ jQuery( document ).ready( function ( $ ) {
                 responseType: stream_mode ? 'blob' : 'blob'  // Always use blob for PDF
             },
             success: function ( response, status, xhr ) {
-                var conten_type = xhr.getResponseHeader( 'content-type' );
+                let conten_type = xhr.getResponseHeader( 'content-type' );
                 if ( conten_type && conten_type.indexOf( 'application/pdf' ) !== -1 ) {
                     // Handle PDF response
-                    var blob = new Blob( [response], { type: 'application/pdf' } );
-                    var url = window.URL.createObjectURL( blob );
+                    let blob = new Blob( [response], { type: 'application/pdf' } );
+                    let url = window.URL.createObjectURL( blob );
                     if ( stream_mode ) {
                         // Open PDF in new tab
-                        var new_tab = window.open( '', '_blank' );
+                        let new_tab = window.open( '', '_blank' );
                         if ( new_tab ) {
                             new_tab.location.href = url;
                         } else {
@@ -39,11 +39,11 @@ jQuery( document ).ready( function ( $ ) {
                         }
                     } else {
                         // Download PDF
-                        var a = document.createElement( 'a' );
-                        var content_disposition = xhr.getResponseHeader( 'content-disposition' );
-                        var filename = 'certificate.pdf';
+                        let a = document.createElement( 'a' );
+                        let content_disposition = xhr.getResponseHeader( 'content-disposition' );
+                        let filename = 'certificate.pdf';
                         if ( content_disposition ) {
-                            var filename_match = content_disposition.match( /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/ );
+                            let filename_match = content_disposition.match( /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/ );
                             if ( filename_match && filename_match[1] ) {
                                 filename = filename_match[1].replace( /['"]/g, '' );
                             }
@@ -59,7 +59,7 @@ jQuery( document ).ready( function ( $ ) {
                 } else {
                     try {
                         // Try to parse error response
-                        var jsonResponse = JSON.parse( new TextDecoder().decode( response ) );
+                        let jsonResponse = JSON.parse( new TextDecoder().decode( response ) );
                         $messages.html( '<div class="notice notice-error"><p>' + ( jsonResponse.data || lcb_frontend.generation_failed ) + '</p></div>' );
                     } catch ( e ) {
                         $messages.html( '<div class="notice notice-error"><p>' + lcb_frontend.generation_failed + '</p></div>' );

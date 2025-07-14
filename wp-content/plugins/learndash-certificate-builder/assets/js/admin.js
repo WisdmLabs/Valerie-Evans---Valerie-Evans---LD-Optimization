@@ -1,11 +1,11 @@
 jQuery( document ).ready( function ( $ ) {
     // Initialize media uploader.
-    var mediaUploader;
+    let mediaUploader;
 
     // Function to update canvas dimensions based on background image
     function updateCanvasDimensions() {
-        var $canvas = $( '.lcb-canvas' );
-        var backgroundId = $( '#lcb_background_image' ).val();
+        let $canvas = $( '.lcb-canvas' );
+        let backgroundId = $( '#lcb_background_image' ).val();
 
         if ( backgroundId ) {
             // Get the background image URL
@@ -19,7 +19,7 @@ jQuery( document ).ready( function ( $ ) {
                 },
                 success: function ( response ) {
                     if ( response.success && response.data ) {
-                        var imageData = response.data;
+                        let imageData = response.data;
                         $canvas.addClass( 'has-background' )
                             .css( {
                                 'width': imageData.width + 'px',
@@ -43,7 +43,7 @@ jQuery( document ).ready( function ( $ ) {
     // Handle media upload button click.
     $( '.lcb-upload-image' ).click( function ( e ) {
         e.preventDefault();
-        var targetId = $( this ).data( 'target' );
+        let targetId = $( this ).data( 'target' );
 
         if ( !mediaUploader ) {
             mediaUploader = wp.media( {
@@ -56,17 +56,17 @@ jQuery( document ).ready( function ( $ ) {
         }
 
         mediaUploader.off( 'select' ).on( 'select', function () {
-            var attachment = mediaUploader.state().get( 'selection' ).first().toJSON();
+            let attachment = mediaUploader.state().get( 'selection' ).first().toJSON();
             $( '#' + targetId ).val( attachment.id );
 
             // Update preview container
-            var previewContainer = $( '.lcb-preview-image' ).filter( function () {
+            let previewContainer = $( '.lcb-preview-image' ).filter( function () {
                 return $( this ).siblings( 'input[type="hidden"]' ).attr( 'id' ) === targetId;
             } );
             previewContainer.html( '<img src="' + attachment.url + '" alt="">' );
 
             // Show remove button
-            var removeButton = $( '.lcb-remove-image[data-target="' + targetId + '"]' );
+            let removeButton = $( '.lcb-remove-image[data-target="' + targetId + '"]' );
             removeButton.removeClass( 'lcb-hidden' ).show();
 
             // If this is a background image, update canvas
@@ -81,13 +81,13 @@ jQuery( document ).ready( function ( $ ) {
     // Handle remove button click.
     $( '.lcb-remove-image' ).click( function ( e ) {
         e.preventDefault();
-        var targetId = $( this ).data( 'target' );
+        let targetId = $( this ).data( 'target' );
 
         // Clear input value
         $( '#' + targetId ).val( '' );
 
         // Clear preview
-        var previewContainer = $( '.lcb-preview-image' ).filter( function () {
+        let previewContainer = $( '.lcb-preview-image' ).filter( function () {
             return $( this ).siblings( 'input[type="hidden"]' ).attr( 'id' ) === targetId;
         } );
         previewContainer.empty();
@@ -105,16 +105,16 @@ jQuery( document ).ready( function ( $ ) {
     $( '.lcb-draggable-element' ).draggable( {
         containment: '.lcb-canvas',
         stop: function ( event, ui ) {
-            var $canvas = $( '.lcb-canvas' );
-            var canvasOffset = $canvas.offset();
-            var elementOffset = $( this ).offset();
+            let $canvas = $( '.lcb-canvas' );
+            let canvasOffset = $canvas.offset();
+            let elementOffset = $( this ).offset();
 
             // Calculate position relative to canvas
-            var relativeX = Math.round( elementOffset.left - canvasOffset.left );
-            var relativeY = Math.round( elementOffset.top - canvasOffset.top );
+            let relativeX = Math.round( elementOffset.left - canvasOffset.left );
+            let relativeY = Math.round( elementOffset.top - canvasOffset.top );
 
             // Update coordinate inputs
-            var $element = $( this );
+            let $element = $( this );
             $element.find( '.lcb-x-coordinate' ).val( relativeX );
             $element.find( '.lcb-y-coordinate' ).val( relativeY );
 
@@ -125,9 +125,9 @@ jQuery( document ).ready( function ( $ ) {
 
     // Handle manual coordinate input
     $( '.lcb-x-coordinate, .lcb-y-coordinate' ).on( 'change', function () {
-        var $element = $( this ).closest( '.lcb-draggable-element' );
-        var x = parseInt( $element.find( '.lcb-x-coordinate' ).val() ) || 0;
-        var y = parseInt( $element.find( '.lcb-y-coordinate' ).val() ) || 0;
+        let $element = $( this ).closest( '.lcb-draggable-element' );
+        let x = parseInt( $element.find( '.lcb-x-coordinate' ).val() ) || 0;
+        let y = parseInt( $element.find( '.lcb-y-coordinate' ).val() ) || 0;
 
         // Set position relative to canvas
         $element.css( {
@@ -141,15 +141,15 @@ jQuery( document ).ready( function ( $ ) {
 
     // Function to update coordinates input with current positions
     function updateCoordinatesInput() {
-        var coordinates = {};
-        var backgroundId = $( '#lcb_background_image' ).val() || 'default';
+        let coordinates = {};
+        let backgroundId = $( '#lcb_background_image' ).val() || 'default';
 
         // Get current coordinates for all elements
         $( '.lcb-draggable-element' ).each( function () {
-            var $element = $( this );
-            var elementId = $element.data( 'element' );
-            var x = parseInt( $element.find( '.lcb-x-coordinate' ).val() ) || 0;
-            var y = parseInt( $element.find( '.lcb-y-coordinate' ).val() ) || 0;
+            let $element = $( this );
+            let elementId = $element.data( 'element' );
+            let x = parseInt( $element.find( '.lcb-x-coordinate' ).val() ) || 0;
+            let y = parseInt( $element.find( '.lcb-y-coordinate' ).val() ) || 0;
 
             coordinates[elementId] = {
                 x: x,
@@ -159,8 +159,8 @@ jQuery( document ).ready( function ( $ ) {
             // Add font settings for username and course list
             if ( ['user_name', 'course_list'].includes( elementId ) ) {
                 // Get font size value directly from the input
-                var $fontSizeInput = $element.find( '.lcb-font-size' );
-                var fontSize = parseInt( $fontSizeInput.get( 0 ).value ) || ( elementId === 'user_name' ? 24 : 18 );
+                let $fontSizeInput = $element.find( '.lcb-font-size' );
+                let fontSize = parseInt( $fontSizeInput.get( 0 ).value ) || ( elementId === 'user_name' ? 24 : 18 );
                 console.log( elementId + ' font size input current value:', fontSize );
 
                 coordinates[elementId].font_size = fontSize;
@@ -172,7 +172,7 @@ jQuery( document ).ready( function ( $ ) {
         } );
 
         // Get existing coordinates for other backgrounds
-        var existingCoordinates = JSON.parse( $( 'input[name="lcb_element_coordinates"]' ).val() || '{}' );
+        let existingCoordinates = JSON.parse( $( 'input[name="lcb_element_coordinates"]' ).val() || '{}' );
         existingCoordinates[backgroundId] = coordinates;
 
         // Update hidden input

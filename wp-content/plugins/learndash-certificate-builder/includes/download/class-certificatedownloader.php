@@ -27,52 +27,51 @@ class CertificateDownloader {
 	 * @return bool Whether the download was successful.
 	 */
 	public function download_certificate( $pdf_content, $filename ) {
+		$success = false;
+
 		try {
-			// Check if headers are already sent.
-			if ( headers_sent( $filename, $line ) ) {
-				return false;
+			// Validate conditions before proceeding.
+			$can_proceed = ! headers_sent( $filename, $line ) &&
+				strlen( $pdf_content ) <= self::MAX_FILE_SIZE;
+
+			if ( $can_proceed ) {
+				// Clean output buffer.
+				while ( ob_get_level() ) {
+					ob_end_clean();
+				}
+
+				// Prevent any extra output.
+				if ( ob_get_length() ) {
+					ob_clean();
+				}
+
+				// Set download headers.
+				header( 'Content-Description: File Transfer' );
+				header( 'Content-Type: application/pdf; charset=binary' );
+				header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( $filename ) . '"' );
+				header( 'Content-Length: ' . strlen( $pdf_content ) );
+				header( 'Content-Transfer-Encoding: binary' );
+				header( 'Cache-Control: private, no-transform, no-store, must-revalidate, max-age=0' );
+				header( 'Pragma: public' );
+				header( 'Expires: 0' );
+				header( 'X-Content-Type-Options: nosniff' );
+
+				// Disable compression.
+				if ( ini_get( 'zlib.output_compression' ) ) {
+					ini_set( 'zlib.output_compression', 'Off' );
+				}
+
+				// Output file content.
+				flush();
+				echo $pdf_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				flush();
+				$success = true;
 			}
-
-			// Check file size.
-			$content_length = strlen( $pdf_content );
-			if ( $content_length > self::MAX_FILE_SIZE ) {
-				return false;
-			}
-
-			// Clean output buffer.
-			while ( ob_get_level() ) {
-				ob_end_clean();
-			}
-
-			// Prevent any extra output.
-			if ( ob_get_length() ) {
-				ob_clean();
-			}
-
-			// Set download headers.
-			header( 'Content-Description: File Transfer' );
-			header( 'Content-Type: application/pdf; charset=binary' );
-			header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( $filename ) . '"' );
-			header( 'Content-Length: ' . $content_length );
-			header( 'Content-Transfer-Encoding: binary' );
-			header( 'Cache-Control: private, no-transform, no-store, must-revalidate, max-age=0' );
-			header( 'Pragma: public' );
-			header( 'Expires: 0' );
-			header( 'X-Content-Type-Options: nosniff' );
-
-			// Disable compression.
-			if ( ini_get( 'zlib.output_compression' ) ) {
-				ini_set( 'zlib.output_compression', 'Off' );
-			}
-
-			// Output file content.
-			flush();
-			echo $pdf_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			flush();
-			return true;
 		} catch ( \Exception $e ) {
-			return false;
+			$success = false;
 		}
+
+		return $success;
 	}
 
 	/**
@@ -83,53 +82,52 @@ class CertificateDownloader {
 	 * @return bool Whether the streaming was successful.
 	 */
 	public function stream_certificate( $pdf_content, $filename ) {
+		$success = false;
+
 		try {
-			// Check if headers are already sent.
-			if ( headers_sent( $filename, $line ) ) {
-				return false;
+			// Validate conditions before proceeding.
+			$can_proceed = ! headers_sent( $filename, $line ) &&
+				strlen( $pdf_content ) <= self::MAX_FILE_SIZE;
+
+			if ( $can_proceed ) {
+				// Clean output buffer.
+				while ( ob_get_level() ) {
+					ob_end_clean();
+				}
+
+				// Prevent any extra output.
+				if ( ob_get_length() ) {
+					ob_clean();
+				}
+
+				// Set streaming headers.
+				header( 'Content-Description: File Transfer' );
+				header( 'Content-Type: application/pdf; charset=binary' );
+				header( 'Content-Disposition: inline; filename="' . sanitize_file_name( $filename ) . '"' );
+				header( 'Content-Length: ' . strlen( $pdf_content ) );
+				header( 'Content-Transfer-Encoding: binary' );
+				header( 'Accept-Ranges: bytes' );
+				header( 'Cache-Control: private, no-transform, no-store, must-revalidate, max-age=0' );
+				header( 'Pragma: public' );
+				header( 'Expires: 0' );
+				header( 'X-Content-Type-Options: nosniff' );
+
+				// Disable compression.
+				if ( ini_get( 'zlib.output_compression' ) ) {
+					ini_set( 'zlib.output_compression', 'Off' );
+				}
+
+				// Output file content.
+				flush();
+				echo $pdf_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				flush();
+				$success = true;
 			}
-
-			// Check file size.
-			$content_length = strlen( $pdf_content );
-			if ( $content_length > self::MAX_FILE_SIZE ) {
-				return false;
-			}
-
-			// Clean output buffer.
-			while ( ob_get_level() ) {
-				ob_end_clean();
-			}
-
-			// Prevent any extra output.
-			if ( ob_get_length() ) {
-				ob_clean();
-			}
-
-			// Set streaming headers.
-			header( 'Content-Description: File Transfer' );
-			header( 'Content-Type: application/pdf; charset=binary' );
-			header( 'Content-Disposition: inline; filename="' . sanitize_file_name( $filename ) . '"' );
-			header( 'Content-Length: ' . $content_length );
-			header( 'Content-Transfer-Encoding: binary' );
-			header( 'Accept-Ranges: bytes' );
-			header( 'Cache-Control: private, no-transform, no-store, must-revalidate, max-age=0' );
-			header( 'Pragma: public' );
-			header( 'Expires: 0' );
-			header( 'X-Content-Type-Options: nosniff' );
-
-			// Disable compression.
-			if ( ini_get( 'zlib.output_compression' ) ) {
-				ini_set( 'zlib.output_compression', 'Off' );
-			}
-
-			// Output file content.
-			flush();
-			echo $pdf_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			flush();
-			return true;
 		} catch ( \Exception $e ) {
-			return false;
+			$success = false;
 		}
+
+		return $success;
 	}
 
 	/**

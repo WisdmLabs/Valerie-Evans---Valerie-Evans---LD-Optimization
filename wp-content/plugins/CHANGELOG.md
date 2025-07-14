@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed completion date marker from default coordinates.
 - Added font settings for username marker including font size, font family, and text transform options.
 - Removed requirement for background image when saving coordinates.
+- Refactored get_course_completion_date method to reduce return statements and improve maintainability
+- Refactored certificate download methods to reduce return statements and improve error handling
+  - Simplified download_certificate method
+  - Simplified stream_certificate method
 
 ### Added
 - Font settings for username marker
