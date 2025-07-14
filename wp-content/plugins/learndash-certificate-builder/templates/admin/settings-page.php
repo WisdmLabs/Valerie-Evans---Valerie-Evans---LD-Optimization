@@ -152,7 +152,7 @@ if ( $background_id ) {
 												$selected_font = isset( $pos['font_family'] ) ? $pos['font_family'] : 'Arial';
 												foreach ( $fonts as $font ) :
 													?>
-													<option value="<?php echo esc_attr( $font ); ?>" 
+													<option value="<?php echo esc_attr( $font ); ?>"
 														<?php selected( $selected_font, $font ); ?>>
 														<?php echo esc_html( $font ); ?>
 													</option>
@@ -174,7 +174,7 @@ if ( $background_id ) {
 												$selected_transform = isset( $pos['text_transform'] ) ? $pos['text_transform'] : 'none';
 												foreach ( $transforms as $value => $label ) :
 													?>
-													<option value="<?php echo esc_attr( $value ); ?>" 
+													<option value="<?php echo esc_attr( $value ); ?>"
 														<?php selected( $selected_transform, $value ); ?>>
 														<?php echo esc_html( $label ); ?>
 													</option>
