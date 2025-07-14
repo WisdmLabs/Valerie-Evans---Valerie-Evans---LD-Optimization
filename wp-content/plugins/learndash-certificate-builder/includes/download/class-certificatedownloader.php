@@ -27,51 +27,7 @@ class CertificateDownloader {
 	 * @return bool Whether the download was successful.
 	 */
 	public function download_certificate( $pdf_content, $filename ) {
-		$success = false;
-
-		try {
-			// Validate conditions before proceeding.
-			$can_proceed = ! headers_sent( $filename, $line ) &&
-				strlen( $pdf_content ) <= self::MAX_FILE_SIZE;
-
-			if ( $can_proceed ) {
-				// Clean output buffer.
-				while ( ob_get_level() ) {
-					ob_end_clean();
-				}
-
-				// Prevent any extra output.
-				if ( ob_get_length() ) {
-					ob_clean();
-				}
-
-				// Set download headers.
-				header( 'Content-Description: File Transfer' );
-				header( 'Content-Type: application/pdf; charset=binary' );
-				header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( $filename ) . '"' );
-				header( 'Content-Length: ' . strlen( $pdf_content ) );
-				header( 'Content-Transfer-Encoding: binary' );
-				header( 'Cache-Control: private, no-transform, no-store, must-revalidate, max-age=0' );
-				header( 'Pragma: public' );
-				header( 'Expires: 0' );
-				header( 'X-Content-Type-Options: nosniff' );
-
-				// Disable compression.
-				if ( ini_get( 'zlib.output_compression' ) ) {
-					ini_set( 'zlib.output_compression', 'Off' );
-				}
-
-				// Output file content.
-				flush();
-				echo $pdf_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				flush();
-				$success = true;
-			}
-		} catch ( \Exception $e ) {
-			$success = false;
-		}
-
-		return $success;
+		return $this->deliver_certificate( $pdf_content, $filename, 'attachment' );
 	}
 
 	/**
@@ -82,6 +38,18 @@ class CertificateDownloader {
 	 * @return bool Whether the streaming was successful.
 	 */
 	public function stream_certificate( $pdf_content, $filename ) {
+		return $this->deliver_certificate( $pdf_content, $filename, 'inline' );
+	}
+
+	/**
+	 * Handle certificate delivery to browser
+	 *
+	 * @param string $pdf_content PDF content as string.
+	 * @param string $filename Desired filename.
+	 * @param string $disposition Content disposition type ('attachment' or 'inline').
+	 * @return bool Whether the delivery was successful.
+	 */
+	private function deliver_certificate( $pdf_content, $filename, $disposition ) {
 		$success = false;
 
 		try {
@@ -100,13 +68,15 @@ class CertificateDownloader {
 					ob_clean();
 				}
 
-				// Set streaming headers.
+				// Set delivery headers.
 				header( 'Content-Description: File Transfer' );
 				header( 'Content-Type: application/pdf; charset=binary' );
-				header( 'Content-Disposition: inline; filename="' . sanitize_file_name( $filename ) . '"' );
+				header( 'Content-Disposition: ' . $disposition . '; filename="' . sanitize_file_name( $filename ) . '"' );
 				header( 'Content-Length: ' . strlen( $pdf_content ) );
 				header( 'Content-Transfer-Encoding: binary' );
-				header( 'Accept-Ranges: bytes' );
+				if ( 'inline' === $disposition ) {
+					header( 'Accept-Ranges: bytes' );
+				}
 				header( 'Cache-Control: private, no-transform, no-store, must-revalidate, max-age=0' );
 				header( 'Pragma: public' );
 				header( 'Expires: 0' );
