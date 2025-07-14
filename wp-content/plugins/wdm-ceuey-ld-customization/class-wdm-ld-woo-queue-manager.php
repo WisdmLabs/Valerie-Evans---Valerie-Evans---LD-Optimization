@@ -230,10 +230,7 @@ class WDM_LD_Woo_Queue_Manager {
 				settings_fields( 'ld_woo_queue_settings' );
 				do_settings_sections( 'ld_woo_queue_settings' );
 				?>
-				<table class="form-table" role="presentation" aria-describedby="queue-settings-description">
-				<caption id="queue-settings-description" class="screen-reader-text">
-					<?php esc_html_e( 'LearnDash WooCommerce Queue Manager Settings - Configure queue processing limits and notification messages', 'wdm-ld-woo-queue-manager' ); ?>
-				</caption>
+				<table class="form-table" aria-describedby="queue-settings-description">
 					<tr>
 						<th scope="row">
 							<label for="<?php echo esc_attr( $this->option_name ); ?>">
