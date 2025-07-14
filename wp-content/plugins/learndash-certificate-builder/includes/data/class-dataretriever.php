@@ -79,24 +79,29 @@ class DataRetriever {
 	 * @return string Formatted completion date.
 	 */
 	public function get_course_completion_date( $user_id, $course_id ) {
-		// Validate user ID.
-		$user_id = absint( $user_id );
-		if ( ! $user_id || ! get_user_by( 'id', $user_id ) ) {
-			return '';
-		}
+		$completion_date = '';
 
-		// Validate course ID.
+		// Validate input parameters.
+		$is_valid  = true;
+		$user_id   = absint( $user_id );
 		$course_id = absint( $course_id );
-		if ( ! $course_id || ! get_post( $course_id ) || get_post_type( $course_id ) !== 'sfwd-courses' ) {
-			return '';
+
+		if ( ! $user_id || ! get_user_by( 'id', $user_id ) ) {
+			$is_valid = false;
 		}
 
-		$completion_date = get_user_meta( $user_id, 'course_completed_' . $course_id, true );
-		if ( ! $completion_date || ! is_numeric( $completion_date ) ) {
-			return '';
+		if ( $is_valid && ( ! $course_id || ! get_post( $course_id ) || get_post_type( $course_id ) !== 'sfwd-courses' ) ) {
+			$is_valid = false;
 		}
 
-		return date_i18n( get_option( 'date_format' ), $completion_date );
+		if ( $is_valid ) {
+			$completion_timestamp = get_user_meta( $user_id, 'course_completed_' . $course_id, true );
+			if ( $completion_timestamp && is_numeric( $completion_timestamp ) ) {
+				$completion_date = date_i18n( get_option( 'date_format' ), $completion_timestamp );
+			}
+		}
+
+		return $completion_date;
 	}
 
 	/**

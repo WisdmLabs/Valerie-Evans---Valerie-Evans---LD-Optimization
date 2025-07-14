@@ -91,9 +91,7 @@ class CertificateGenerator {
 		$image_data    = wp_get_attachment_image_src( $background_id, 'full' );
 
 		// Default to A4 landscape if no image.
-		$format     = 'A4-L';
-		$img_width  = 297; // A4 landscape width in mm.
-		$img_height = 210; // A4 landscape height in mm.
+		$format = 'A4-L';
 
 		// If we have image dimensions, use them.
 		if ( $image_data ) {
@@ -134,12 +132,12 @@ class CertificateGenerator {
 		$mpdf->WriteHTML(
 			'
 			<style>
-				body { 
-					margin: 0; 
+				body {
+					margin: 0;
 					padding: 0;
 				}
-				.certificate-element { 
-					font-family: Arial, sans-serif; 
+				.certificate-element {
+					font-family: Arial, sans-serif;
 				}
 				.course-list {
 					page-break-inside: avoid;
