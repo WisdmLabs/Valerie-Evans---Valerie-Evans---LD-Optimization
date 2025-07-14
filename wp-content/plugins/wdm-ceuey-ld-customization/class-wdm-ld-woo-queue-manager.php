@@ -42,6 +42,20 @@ define( 'WDM_LD_WOO_QUEUE_MANAGER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 class WDM_LD_Woo_Queue_Manager {
 
 	/**
+	 * Meta key for related course.
+	 *
+	 * @var string
+	 */
+	const META_KEY_RELATED_COURSE = '_related_course';
+
+	/**
+	 * Meta key for related group.
+	 *
+	 * @var string
+	 */
+	const META_KEY_RELATED_GROUP = '_related_group';
+
+	/**
 	 * Singleton instance of the WDM_LD_Woo_Queue_Manager class.
 	 *
 	 * @var $instance Instance of WDM_LD_Woo_Queue_Manager class
@@ -77,6 +91,24 @@ class WDM_LD_Woo_Queue_Manager {
 	 * @var String $notice_message_option_name
 	 */
 	private $notice_message_option_name = 'ld_woo_queue_notice_message';
+
+	/**
+	 * Default notice message for queue processing delay.
+	 *
+	 * Note: This message should match the string in __() calls for translations.
+	 *
+	 * @var string
+	 */
+	const DEFAULT_NOTICE_MESSAGE = 'Notice: You might experience a short delay before all courses appear in your account.';
+
+	/**
+	 * Get the translated default notice message.
+	 *
+	 * @return string
+	 */
+	private function get_default_notice_message() {
+		return __( 'Notice: You might experience a short delay before all courses appear in your account.', 'wdm-ld-woo-queue-manager' );
+	}
 
 	/**
 	 * Gets the instance of the WDM_LD_Woo_Queue_Manager class.
@@ -156,7 +188,7 @@ class WDM_LD_Woo_Queue_Manager {
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_textarea_field',
-				'default'           => __( 'Notice: You might experience a short delay before all courses appear in your account.', 'wdm-ld-woo-queue-manager' ),
+				'default'           => $this->get_default_notice_message(),
 			)
 		);
 	}
@@ -198,7 +230,10 @@ class WDM_LD_Woo_Queue_Manager {
 				settings_fields( 'ld_woo_queue_settings' );
 				do_settings_sections( 'ld_woo_queue_settings' );
 				?>
-				<table class="form-table">
+				<table class="form-table" role="presentation" aria-describedby="queue-settings-description">
+				<caption id="queue-settings-description" class="screen-reader-text">
+					<?php esc_html_e( 'LearnDash WooCommerce Queue Manager Settings - Configure queue processing limits and notification messages', 'wdm-ld-woo-queue-manager' ); ?>
+				</caption>
 					<tr>
 						<th scope="row">
 							<label for="<?php echo esc_attr( $this->option_name ); ?>">
@@ -206,7 +241,7 @@ class WDM_LD_Woo_Queue_Manager {
 							</label>
 						</th>
 						<td>
-							<input type="number" 
+							<input type="number"
 								id="<?php echo esc_attr( $this->option_name ); ?>"
 								name="<?php echo esc_attr( $this->option_name ); ?>"
 								value="<?php echo esc_attr( get_option( $this->option_name, 10 ) ); ?>"
@@ -225,7 +260,7 @@ class WDM_LD_Woo_Queue_Manager {
 							</label>
 						</th>
 						<td>
-							<input type="number" 
+							<input type="number"
 								id="<?php echo esc_attr( $this->product_option_name ); ?>"
 								name="<?php echo esc_attr( $this->product_option_name ); ?>"
 								value="<?php echo esc_attr( get_option( $this->product_option_name, 10 ) ); ?>"
@@ -244,7 +279,7 @@ class WDM_LD_Woo_Queue_Manager {
 							</label>
 						</th>
 						<td>
-							<textarea id="<?php echo esc_attr( $this->notice_message_option_name ); ?>" name="<?php echo esc_attr( $this->notice_message_option_name ); ?>" rows="3" cols="50" class="large-text"><?php echo esc_textarea( get_option( $this->notice_message_option_name, __( 'Notice: You might experience a short delay before all courses appear in your account.', 'wdm-ld-woo-queue-manager' ) ) ); ?></textarea>
+							<textarea id="<?php echo esc_attr( $this->notice_message_option_name ); ?>" name="<?php echo esc_attr( $this->notice_message_option_name ); ?>" rows="3" cols="50" class="large-text"><?php echo esc_textarea( get_option( $this->notice_message_option_name, $this->get_default_notice_message() ) ); ?></textarea>
 							<p class="description">
 								<?php esc_html_e( 'Set the message shown to users at checkout when the course/group limit is exceeded. Leave blank to disable.', 'wdm-ld-woo-queue-manager' ); ?>
 							</p>
@@ -309,11 +344,11 @@ class WDM_LD_Woo_Queue_Manager {
 			$product_id = $cart_item['product_id'];
 			$product    = wc_get_product( $product_id );
 			if ( ! empty( $product->get_variation_id() ) ) {
-				$courses = (array) get_post_meta( $product->get_variation_id(), '_related_course', true );
-				$groups  = (array) get_post_meta( $product->get_variation_id(), '_related_group', true );
+				$courses = (array) get_post_meta( $product->get_variation_id(), self::META_KEY_RELATED_COURSE, true );
+				$groups  = (array) get_post_meta( $product->get_variation_id(), self::META_KEY_RELATED_GROUP, true );
 			} else {
-				$courses = (array) get_post_meta( $product_id, '_related_course', true );
-				$groups  = (array) get_post_meta( $product_id, '_related_group', true );
+				$courses = (array) get_post_meta( $product_id, self::META_KEY_RELATED_COURSE, true );
+				$groups  = (array) get_post_meta( $product_id, self::META_KEY_RELATED_GROUP, true );
 			}
 
 			$courses = array_filter(
@@ -335,7 +370,7 @@ class WDM_LD_Woo_Queue_Manager {
 		}
 
 		$limit          = get_option( $this->product_option_name, 10 );
-		$notice_message = trim( get_option( $this->notice_message_option_name, __( 'Notice: You might experience a short delay before all courses appear in your account.', 'wdm-ld-woo-queue-manager' ) ) );
+		$notice_message = trim( get_option( $this->notice_message_option_name, $this->get_default_notice_message() ) );
 
 		if ( $courses_count + $groups_count > $limit && $notice_message ) {
 			wc_add_notice(
@@ -477,16 +512,13 @@ class WDM_LD_Woo_Queue_Manager {
 
 			$customer_id = ! empty( $customer_id ) && is_numeric( $customer_id ) ? $customer_id : $order->get_user_id();
 
-			$courses_count = 0;
-			$groups_count  = 0;
-
 			foreach ( $products as $product ) {
 				if ( ! empty( $product->get_variation_id() ) ) {
-					$courses_id = (array) get_post_meta( $product->get_variation_id(), '_related_course', true );
-					$groups_id  = (array) get_post_meta( $product->get_variation_id(), '_related_group', true );
+					$courses_id = (array) get_post_meta( $product->get_variation_id(), self::META_KEY_RELATED_COURSE, true );
+					$groups_id  = (array) get_post_meta( $product->get_variation_id(), self::META_KEY_RELATED_GROUP, true );
 				} else {
-					$courses_id = (array) get_post_meta( $product['product_id'], '_related_course', true );
-					$groups_id  = (array) get_post_meta( $product['product_id'], '_related_group', true );
+					$courses_id = (array) get_post_meta( $product['product_id'], self::META_KEY_RELATED_COURSE, true );
+					$groups_id  = (array) get_post_meta( $product['product_id'], self::META_KEY_RELATED_GROUP, true );
 				}
 
 				if ( $courses_id && is_array( $courses_id ) ) {
@@ -560,11 +592,11 @@ class WDM_LD_Woo_Queue_Manager {
 
 		foreach ( $products as $product ) {
 			if ( ! empty( $product->get_variation_id() ) ) {
-				$courses_id = (array) get_post_meta( $product->get_variation_id(), '_related_course', true );
-				$groups_id  = (array) get_post_meta( $product->get_variation_id(), '_related_group', true );
+				$courses_id = (array) get_post_meta( $product->get_variation_id(), self::META_KEY_RELATED_COURSE, true );
+				$groups_id  = (array) get_post_meta( $product->get_variation_id(), self::META_KEY_RELATED_GROUP, true );
 			} else {
-				$courses_id = (array) get_post_meta( $product['product_id'], '_related_course', true );
-				$groups_id  = (array) get_post_meta( $product['product_id'], '_related_group', true );
+				$courses_id = (array) get_post_meta( $product['product_id'], self::META_KEY_RELATED_COURSE, true );
+				$groups_id  = (array) get_post_meta( $product['product_id'], self::META_KEY_RELATED_GROUP, true );
 			}
 
 			if ( $courses_id && is_array( $courses_id ) ) {
