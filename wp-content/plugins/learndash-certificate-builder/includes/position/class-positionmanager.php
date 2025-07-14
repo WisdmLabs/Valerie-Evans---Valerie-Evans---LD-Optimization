@@ -81,24 +81,22 @@ class PositionManager {
 	 */
 	private function validate_coordinates( $coordinates ) {
 		$required_elements = array( 'user_name', 'course_list', 'signature' );
+		$is_valid          = true;
 
-		// Check if all required elements exist.
+		// Check if all required elements exist and have valid coordinates.
 		foreach ( $required_elements as $element ) {
-			if ( ! isset( $coordinates[ $element ] ) ) {
-				return false;
-			}
+			$element_valid = isset( $coordinates[ $element ] ) &&
+				isset( $coordinates[ $element ]['x'] ) &&
+				isset( $coordinates[ $element ]['y'] ) &&
+				is_numeric( $coordinates[ $element ]['x'] ) &&
+				is_numeric( $coordinates[ $element ]['y'] );
 
-			// Check if x and y coordinates exist for each element.
-			if ( ! isset( $coordinates[ $element ]['x'] ) || ! isset( $coordinates[ $element ]['y'] ) ) {
-				return false;
-			}
-
-			// Validate coordinate values.
-			if ( ! is_numeric( $coordinates[ $element ]['x'] ) || ! is_numeric( $coordinates[ $element ]['y'] ) ) {
-				return false;
+			if ( ! $element_valid ) {
+				$is_valid = false;
+				break;
 			}
 		}
 
-		return true;
+		return $is_valid;
 	}
 }
