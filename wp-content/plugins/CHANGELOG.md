@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Simplified download_certificate method
   - Simplified stream_certificate method
   - Simplified delete_certificate method
+  - Combined duplicate code into deliver_certificate method
 - Refactored validate_coordinates method to consolidate validation logic and reduce return statements
 - Refactored queue notice message to use a constant and dedicated translation method
 - Refactored course and group meta keys into class constants to improve maintainability
