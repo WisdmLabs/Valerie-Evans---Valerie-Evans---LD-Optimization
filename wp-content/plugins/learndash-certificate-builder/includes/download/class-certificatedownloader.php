@@ -189,17 +189,15 @@ class CertificateDownloader {
 			// Verify file is in certificates directory.
 			$upload_dir = wp_upload_dir();
 			$cert_dir   = $upload_dir['basedir'] . '/certificates';
-			if ( strpos( $file_path, $cert_dir ) !== 0 ) {
-				return false;
+
+			// Return true for non-existent files or successful deletion.
+			$result = true;
+
+			if ( strpos( $file_path, $cert_dir ) === 0 && file_exists( $file_path ) ) {
+				$result = unlink( $file_path );
 			}
 
-			// Check if file exists.
-			if ( ! file_exists( $file_path ) ) {
-				return true;
-			}
-
-			// Delete file.
-			return unlink( $file_path );
+			return $result;
 		} catch ( \Exception $e ) {
 			return false;
 		}

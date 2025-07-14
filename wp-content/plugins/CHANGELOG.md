@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored certificate download methods to reduce return statements and improve error handling
   - Simplified download_certificate method
   - Simplified stream_certificate method
+  - Simplified delete_certificate method
 
 ### Added
 - Font settings for username marker
