@@ -1,0 +1,17 @@
+digraph "plugins/learndash-certificate-builder/vendor/psr"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  compound=true
+  subgraph clusterdir_c471799f998ba8e2c1edfdfce456ff17 {
+    graph [ bgcolor="#edf0f7", pencolor="grey50", label="vendor", fontname=Helvetica,fontsize=10 style="filled,dashed", URL="dir_c471799f998ba8e2c1edfdfce456ff17.html",tooltip=""]
+  subgraph clusterdir_eb14d45b3faedecee4ec3062b013d106 {
+    graph [ bgcolor="#edf0f7", pencolor="grey25", label="", fontname=Helvetica,fontsize=10 style="filled,bold", URL="dir_eb14d45b3faedecee4ec3062b013d106.html",tooltip=""]
+    dir_eb14d45b3faedecee4ec3062b013d106 [shape=plaintext, label="psr"];
+  dir_83800be3c17a721025c9570ace989383 [label="http-message", fillcolor="#a2b4d6", color="grey25", style="filled", URL="dir_83800be3c17a721025c9570ace989383.html",tooltip=""];
+  dir_875912ecf1363e507ed0a433cd234f54 [label="log", fillcolor="#a2b4d6", color="grey25", style="filled", URL="dir_875912ecf1363e507ed0a433cd234f54.html",tooltip=""];
+  }
+  }
+}
