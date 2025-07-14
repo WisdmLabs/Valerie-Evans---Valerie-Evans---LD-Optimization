@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Instructions for LearnDash Certificate Builder documentation
   - Instructions for WDM CEU Customization documentation
   - Prerequisites and viewing instructions
+- Added SonarQube configuration to exclude generated documentation from analysis
 
 ### Fixed
 - Font settings (size, family, text transform) for username marker now save correctly.
