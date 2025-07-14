@@ -1,0 +1,16 @@
+digraph "plugins/learndash-certificate-builder/vendor/mpdf/psr-http-message-shim"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  compound=true
+  subgraph clusterdir_263fc346572e20130f8704bda122b192 {
+    graph [ bgcolor="#edf0f7", pencolor="grey50", label="mpdf", fontname=Helvetica,fontsize=10 style="filled,dashed", URL="dir_263fc346572e20130f8704bda122b192.html",tooltip=""]
+  subgraph clusterdir_7a561a5e35b95534ed22c0493ddb32ce {
+    graph [ bgcolor="#edf0f7", pencolor="grey25", label="", fontname=Helvetica,fontsize=10 style="filled,bold", URL="dir_7a561a5e35b95534ed22c0493ddb32ce.html",tooltip=""]
+    dir_7a561a5e35b95534ed22c0493ddb32ce [shape=plaintext, label="psr-http-message-shim"];
+  dir_246065c3eb44217949227216774773fe [label="src", fillcolor="#a2b4d6", color="grey25", style="filled", URL="dir_246065c3eb44217949227216774773fe.html",tooltip=""];
+  }
+  }
+}

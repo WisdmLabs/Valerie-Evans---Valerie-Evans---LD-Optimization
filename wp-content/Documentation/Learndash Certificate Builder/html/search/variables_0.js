@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['_24background_5fid_0',['$background_id',['../certificate-form_8php.html#a9acd525308751c743c87119e0ba1381c',1,'certificate-form.php']]],
+  ['_24cert_5fdir_1',['$cert_dir',['../uninstall_8php.html#a811b784081980690148f45226b7a1b86',1,'uninstall.php']]],
+  ['_24certificate_5fdownloader_2',['$certificate_downloader',['../classLearnDash__Certificate__Builder_1_1LearnDash__Certificate__Builder.html#af9f968a91713b5dafb544c9f0172a3a0',1,'LearnDash_Certificate_Builder::LearnDash_Certificate_Builder']]],
+  ['_24certificate_5fgenerator_3',['$certificate_generator',['../classLearnDash__Certificate__Builder_1_1LearnDash__Certificate__Builder.html#abd62a4d8f572e3ec481c65c08ecd7feb',1,'LearnDash_Certificate_Builder::LearnDash_Certificate_Builder']]],
+  ['_24current_5fcoordinates_4',['$current_coordinates',['../settings-page_8php.html#aca761ec70d5197b762b00f3a7ec0c668',1,'settings-page.php']]],
+  ['_24data_5fretriever_5',['$data_retriever',['../classLearnDash__Certificate__Builder_1_1Generation_1_1CertificateGenerator.html#a54c936bc885bab3b3ca8da469d82d678',1,'LearnDash_Certificate_Builder\Generation\CertificateGenerator\$data_retriever'],['../classLearnDash__Certificate__Builder_1_1LearnDash__Certificate__Builder.html#af4a5714d17435cf8ecbe48c064902072',1,'LearnDash_Certificate_Builder\LearnDash_Certificate_Builder\$data_retriever']]],
+  ['_24default_5fcoordinates_6',['$default_coordinates',['../settings-page_8php.html#a78763711796691baeca8592cd67e5a78',1,'settings-page.php']]],
+  ['_24elements_7',['$elements',['../settings-page_8php.html#ad18dd8fbe31b294e2bc4711dcde4548d',1,'settings-page.php']]],
+  ['_24fonts_8',['$fonts',['../settings-page_8php.html#ac330cfe6dbddd6c5d814439f97fbaf69',1,'settings-page.php']]],
+  ['_24form_5fcoordinates_9',['$form_coordinates',['../settings-page_8php.html#a4922c499afc3e1ea55019749f05d0d1c',1,'settings-page.php']]],
+  ['_24position_5fmanager_10',['$position_manager',['../classLearnDash__Certificate__Builder_1_1Generation_1_1CertificateGenerator.html#a4d6637a769ee2f32c8a97a55f678d1a3',1,'LearnDash_Certificate_Builder\Generation\CertificateGenerator\$position_manager'],['../classLearnDash__Certificate__Builder_1_1LearnDash__Certificate__Builder.html#a073c2776bf0b1980d9ab04826e702b03',1,'LearnDash_Certificate_Builder\LearnDash_Certificate_Builder\$position_manager']]],
+  ['_24selected_5ffont_11',['$selected_font',['../settings-page_8php.html#a180f99909522da0efedb01229663f0fd',1,'settings-page.php']]],
+  ['_24selected_5ftransform_12',['$selected_transform',['../settings-page_8php.html#a2d4f1bbf7b254b9bc28edad4dc278d2c',1,'settings-page.php']]],
+  ['_24settings_13',['$settings',['../classLearnDash__Certificate__Builder_1_1LearnDash__Certificate__Builder.html#ae4a32d6aaba7f165496fb2828bcd560b',1,'LearnDash_Certificate_Builder::LearnDash_Certificate_Builder']]],
+  ['_24transforms_14',['$transforms',['../settings-page_8php.html#ae0c55d8ef1d845000083978440e65cb7',1,'settings-page.php']]],
+  ['_24upload_5fdir_15',['$upload_dir',['../uninstall_8php.html#a6dfeab10758bfba126eacc1f4a8a1440',1,'uninstall.php']]]
+];
