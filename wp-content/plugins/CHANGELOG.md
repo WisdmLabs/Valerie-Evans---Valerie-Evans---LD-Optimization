@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added comprehensive documentation generation instructions to README.md
+  - Instructions for LearnDash Certificate Builder documentation
+  - Instructions for WDM CEU Customization documentation
+  - Prerequisites and viewing instructions
+
 ### Fixed
 - Font settings (size, family, text transform) for username marker now save correctly.
 - Updated PHP handler to preserve font settings when saving coordinates.
