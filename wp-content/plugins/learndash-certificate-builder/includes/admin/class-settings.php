@@ -1,25 +1,58 @@
 <?php
 /**
- * Admin settings class for LearnDash Certificate Builder
+ * Admin Settings Handler for LearnDash Certificate Builder
+ *
+ * @file
+ * @brief Manages plugin settings and admin interface.
+ * @details This file contains the Settings class which handles all plugin
+ * settings, including the admin interface, options management, and
+ * certificate template configuration.
  *
  * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 
 namespace LearnDash_Certificate_Builder\Admin;
 
 /**
- * Handles the admin settings page for certificate builder.
+ * Admin settings handler for certificate builder.
+ *
+ * @brief Class for managing plugin settings.
+ * @details Handles all plugin settings functionality including:
+ *          - Admin menu and pages
+ *          - Settings fields and validation
+ *          - Template configuration
+ *          - Media management
+ *          - Element coordinates
+ *
+ * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 class Settings {
 	/**
 	 * Initialize the admin settings.
+	 *
+	 * @brief Constructor - Set up settings.
+	 * @details Initializes settings and adds necessary WordPress hooks
+	 * for the admin interface.
+	 *
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function __construct() {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+
 	}
 
 	/**
 	 * Register plugin settings.
+	 *
+	 * @brief Register WordPress settings.
+	 * @details Registers all plugin settings with WordPress settings API
+	 * and defines their validation callbacks.
+	 *
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function register_settings() {
 		register_setting(
@@ -53,8 +86,14 @@ class Settings {
 	/**
 	 * Sanitize coordinates data.
 	 *
+	 * @brief Sanitize element coordinates.
+	 * @details Validates and sanitizes the coordinates JSON data for certificate
+	 * elements, including position and font settings.
+	 *
 	 * @param string $input The coordinates JSON string.
 	 * @return array The sanitized coordinates array.
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function sanitize_coordinates( $input ) {
 		// If input is already an array, return it.
@@ -84,8 +123,8 @@ class Settings {
 						'y' => absint( $pos['y'] ),
 					);
 
-					// Process font settings for username and course list elements.
-					if ( in_array( $element, array( 'user_name', 'course_list' ), true ) ) {
+					// Process font settings for username, course list and page number elements.
+					if ( in_array( $element, array( 'user_name', 'course_list', 'page_number' ), true ) ) {
 						// Add font size if set.
 						if ( isset( $pos['font_size'] ) ) {
 							$sanitized[ absint( $background_id ) ][ $element ]['font_size'] = absint( $pos['font_size'] );
@@ -108,6 +147,14 @@ class Settings {
 
 	/**
 	 * Render the settings page content.
+	 *
+	 * @brief Display admin settings page.
+	 * @details Outputs the HTML for the plugin's admin settings page,
+	 * including forms and current settings. Handles coordinate management
+	 * and default positions.
+	 *
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function render_settings_page() {
 		// Get current settings.
@@ -134,6 +181,10 @@ class Settings {
 				'signature'   => array(
 					'x' => 100,
 					'y' => 400,
+				),
+				'page_number' => array(
+					'x' => 100,
+					'y' => 500,
 				),
 			);
 		}

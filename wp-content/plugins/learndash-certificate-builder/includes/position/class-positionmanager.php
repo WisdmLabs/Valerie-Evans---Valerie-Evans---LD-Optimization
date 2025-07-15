@@ -1,30 +1,55 @@
 <?php
 /**
- * Position Manager class for LearnDash Certificate Builder
+ * Position Manager for LearnDash Certificate Builder.
+ *
+ * @file
+ * @brief Manages element positioning on certificate templates.
+ * @details This file contains the PositionManager class which handles the
+ * positioning and layout of elements on certificate templates, including
+ * text, images, and dynamic content like course lists.
  *
  * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 
 namespace LearnDash_Certificate_Builder\Position;
 
 /**
- * Class PositionManager
- * Handles storage and retrieval of element coordinates for certificate generation
+ * Position management handler for certificate elements.
+ *
+ * @brief Class for managing element positions on certificates.
+ * @details Handles positioning and layout management for certificate elements:
+ *          - Storing element coordinates
+ *          - Converting between units (px to mm)
+ *          - Managing element dimensions
+ *          - Calculating layout positions
+ *
+ * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 class PositionManager {
 	/**
-	 * Option name for storing coordinates
+	 * WordPress option name for storing element coordinates.
 	 *
+	 * @brief Option key for coordinates storage.
 	 * @var string
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private $coordinates_option = 'lcb_element_coordinates';
 
 	/**
-	 * Save coordinates for a specific background
+	 * Stores element coordinates for a certificate background.
+	 *
+	 * @brief Saves element coordinates for a specific background.
+	 * @details Validates and stores the coordinates for certificate elements
+	 * associated with a specific background image.
 	 *
 	 * @param int   $background_id The background image ID.
 	 * @param array $coordinates Array of element coordinates.
 	 * @return bool Whether the save was successful.
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function save_coordinates( $background_id, $coordinates ) {
 		if ( ! $this->validate_coordinates( $coordinates ) ) {
@@ -38,10 +63,16 @@ class PositionManager {
 	}
 
 	/**
-	 * Get coordinates for a specific background
+	 * Retrieves element coordinates for a certificate background.
+	 *
+	 * @brief Gets element coordinates for a specific background.
+	 * @details Retrieves stored coordinates for certificate elements. Returns
+	 * default coordinates if none are found for the specified background.
 	 *
 	 * @param int $background_id The background image ID.
 	 * @return array Array of element coordinates.
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function get_coordinates( $background_id ) {
 		$all_coordinates = get_option( $this->coordinates_option, array() );
@@ -52,9 +83,17 @@ class PositionManager {
 
 
 	/**
-	 * Get default coordinates for elements
+	 * Provides default element coordinates.
+	 *
+	 * @brief Gets default coordinates for certificate elements.
+	 * @details Returns predefined coordinates for essential certificate elements:
+	 * - User name placement
+	 * - Course list position
+	 * - Signature location
 	 *
 	 * @return array Default coordinates.
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function get_default_coordinates() {
 		return array(
@@ -74,10 +113,16 @@ class PositionManager {
 	}
 
 	/**
-	 * Validate coordinates array structure
+	 * Validates coordinate array structure.
+	 *
+	 * @brief Validates the structure of coordinates array.
+	 * @details Ensures coordinates array contains all required elements and
+	 * valid numeric values for x and y coordinates.
 	 *
 	 * @param array $coordinates Array of coordinates to validate.
 	 * @return bool Whether the coordinates are valid.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private function validate_coordinates( $coordinates ) {
 		$required_elements = array( 'user_name', 'course_list', 'signature' );

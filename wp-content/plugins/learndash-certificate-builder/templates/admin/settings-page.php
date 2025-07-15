@@ -31,6 +31,13 @@ $default_coordinates = array(
 		'x' => 100,
 		'y' => 400,
 	),
+	'page_number' => array(
+		'x'              => 100,
+		'y'              => 500,
+		'font_size'      => 12,
+		'font_family'    => 'Arial',
+		'text_transform' => 'none',
+	),
 );
 
 // Get coordinates for current background or use defaults.
@@ -56,6 +63,17 @@ if ( ! isset( $current_coordinates['course_list']['font_family'] ) ) {
 }
 if ( ! isset( $current_coordinates['course_list']['text_transform'] ) ) {
 	$current_coordinates['course_list']['text_transform'] = 'none';
+}
+
+// Ensure font settings exist for course list.
+if ( ! isset( $current_coordinates['page_number']['font_size'] ) ) {
+	$current_coordinates['page_number']['font_size'] = 18;
+}
+if ( ! isset( $current_coordinates['page_number']['font_family'] ) ) {
+	$current_coordinates['page_number']['font_family'] = 'Arial';
+}
+if ( ! isset( $current_coordinates['page_number']['text_transform'] ) ) {
+	$current_coordinates['page_number']['text_transform'] = 'none';
 }
 
 // Only include the current background's coordinates in the form.
@@ -121,6 +139,7 @@ if ( $background_id ) {
 						'user_name'   => __( 'User Name', 'learndash-certificate-builder' ),
 						'course_list' => __( 'Course List', 'learndash-certificate-builder' ),
 						'signature'   => __( 'Signature', 'learndash-certificate-builder' ),
+						'page_number' => __( 'Page Number', 'learndash-certificate-builder' ),
 					);
 
 					foreach ( $elements as $element_id => $element_label ) :
@@ -135,7 +154,7 @@ if ( $background_id ) {
 								X: <input type="number" class="lcb-x-coordinate" value="<?php echo esc_attr( $pos['x'] ); ?>">
 								Y: <input type="number" class="lcb-y-coordinate" value="<?php echo esc_attr( $pos['y'] ); ?>">
 							</div>
-							<?php if ( in_array( $element_id, array( 'user_name', 'course_list' ), true ) ) : ?>
+							<?php if ( in_array( $element_id, array( 'user_name', 'course_list', 'page_number' ), true ) ) : ?>
 								<div class="lcb-element-styles">
 									<div class="lcb-style-control">
 										<label>
@@ -193,3 +212,90 @@ if ( $background_id ) {
 		<?php submit_button( __( 'Save Changes', 'learndash-certificate-builder' ) ); ?>
 	</form>
 </div>
+
+<script>
+// Initialize admin object with necessary data.
+var lcb_admin = {
+	ajaxurl: '<?php echo esc_js( admin_url( 'admin-ajax.php' ) ); ?>',
+	nonce: '<?php echo esc_js( wp_create_nonce( 'lcb_admin_nonce' ) ); ?>'
+};
+</script>
+
+<style>
+.lcb-position-editor {
+	margin: 20px 0;
+}
+
+.lcb-canvas {
+	position: relative;
+	width: 800px;
+	height: 600px;
+	border: 1px solid #ccc;
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.lcb-draggable-element {
+	position: absolute;
+	padding: 10px;
+	background: rgba(255, 255, 255, 0.9);
+	border: 1px solid #999;
+	cursor: move;
+	min-width: 100px;
+}
+
+.lcb-element-coordinates {
+	margin-top: 5px;
+	font-size: 12px;
+}
+
+.lcb-element-coordinates input {
+	width: 60px;
+	margin: 0 5px;
+}
+
+.lcb-element-styles {
+	margin-top: 10px;
+	padding: 8px;
+	background: #fff;
+	border: 1px solid #e5e5e5;
+	border-radius: 3px;
+}
+
+.lcb-style-control {
+	margin-bottom: 8px;
+}
+
+.lcb-style-control:last-child {
+	margin-bottom: 0;
+}
+
+.lcb-style-control label {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.lcb-style-input {
+	flex: 1;
+	min-width: 0;
+}
+
+.lcb-preview-image {
+	margin: 10px 0;
+	max-width: 300px;
+}
+
+.lcb-preview-image img {
+	max-width: 100%;
+	height: auto;
+}
+
+.lcb-settings-section {
+	margin: 30px 0;
+	padding: 20px;
+	background: #fff;
+	border: 1px solid #ccc;
+}
+</style> 

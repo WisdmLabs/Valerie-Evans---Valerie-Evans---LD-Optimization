@@ -1,8 +1,12 @@
 <?php
 /**
- * Certificate Generator class for LearnDash Certificate Builder
+ * Certificate Generator for LearnDash.
+ *
+ * @file
+ * Handles PDF certificate generation using mPDF library.
  *
  * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 
 namespace LearnDash_Certificate_Builder\Generation;
@@ -13,29 +17,55 @@ use LearnDash_Certificate_Builder\Position\PositionManager;
 use LearnDash_Certificate_Builder\Data\DataRetriever;
 
 /**
- * Class CertificateGenerator
- * Handles PDF certificate generation using mPDF
+ * PDF Certificate Generator.
+ *
+ * @brief Handles generation of PDF certificates.
+ *
+ * @details This class is responsible for generating PDF certificates using mPDF library.
+ * It handles:
+ * - PDF initialization with custom configuration
+ * - Background image placement
+ * - Text and image element positioning
+ * - Course list formatting and pagination
+ * - User name and signature placement
+ *
+ * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 class CertificateGenerator {
 	/**
-	 * Position manager instance
+	 * Position manager instance.
+	 *
+	 * @brief Position manager for element coordinates.
 	 *
 	 * @var PositionManager
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private $position_manager;
 
 	/**
-	 * Data retriever instance
+	 * Data retriever instance.
+	 *
+	 * @brief Data retriever for user and course information.
 	 *
 	 * @var DataRetriever
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private $data_retriever;
 
 	/**
-	 * Constructor
+	 * Constructor for CertificateGenerator.
+	 *
+	 * @brief Initializes the certificate generator.
+	 *
+	 * @details Creates a new instance with position management and data retrieval capabilities.
 	 *
 	 * @param PositionManager $position_manager Position manager instance.
 	 * @param DataRetriever   $data_retriever Data retriever instance.
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function __construct( PositionManager $position_manager, DataRetriever $data_retriever ) {
 		$this->position_manager = $position_manager;
@@ -43,12 +73,20 @@ class CertificateGenerator {
 	}
 
 	/**
-	 * Generate certificate PDF
+	 * Generate PDF certificate.
+	 *
+	 * @brief Generates a PDF certificate.
+	 *
+	 * @details Creates a PDF certificate with background image, user information,
+	 * course list, and signature. Handles positioning and pagination of elements.
 	 *
 	 * @param int   $user_id User ID.
 	 * @param array $course_ids Array of course IDs.
 	 * @param int   $background_id Background image ID.
 	 * @return string|false PDF content as string or false on failure.
+	 * @throws MpdfException When PDF generation fails.
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function generate_certificate( $user_id, $course_ids, $background_id ) {
 		try {
@@ -80,10 +118,21 @@ class CertificateGenerator {
 	}
 
 	/**
-	 * Initialize mPDF with custom configuration
+	 * Initialize mPDF configuration.
+	 *
+	 * @brief Initializes mPDF with custom configuration.
+	 *
+	 * @details Sets up mPDF instance with:
+	 * - Custom page dimensions based on background image
+	 * - Zero margins for precise element positioning
+	 * - DPI settings for consistent rendering
+	 * - Multi-page support configuration
+	 * - Default CSS styles
 	 *
 	 * @return Mpdf mPDF instance.
 	 * @throws MpdfException When mPDF initialization fails.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private function init_mpdf() {
 		// Get background image dimensions.
@@ -157,32 +206,71 @@ class CertificateGenerator {
 	}
 
 	/**
-	 * Add text element to PDF
+	 * Add text element to certificate.
+	 *
+	 * @brief Adds a text element to the PDF.
+	 *
+	 * @details Positions and adds a text element to the PDF with proper formatting.
+	 * Converts pixel coordinates to millimeters for accurate placement.
 	 *
 	 * @param Mpdf   $mpdf mPDF instance.
 	 * @param string $content Element content.
-	 * @param array  $position Element position.
+	 * @param array  $position Element position coordinates.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private function add_element( $mpdf, $content, $position ) {
 		// Convert position from pixels to mm.
 		$x = isset( $position['x'] ) ? round( $position['x'] * 25.4 / 96 ) : 0;
 		$y = isset( $position['y'] ) ? round( $position['y'] * 25.4 / 96 ) : 0;
 
-		$html = sprintf(
-			'<div class="certificate-element" style="position: absolute; left: %dmm; top: %dmm;">%s</div>',
-			$x,
-			$y,
-			wp_kses_post( $content )
-		);
+		// If this is a username element (identified by the font-weight: bold style).
+		if ( strpos( $content, 'font-weight: bold' ) !== false ) {
+			// Extract text content.
+			$text_content = strip_tags( $content );
+
+			// Get font settings from position.
+			$font_size   = isset( $position['font_size'] ) ? $position['font_size'] : 24;
+			$font_family = isset( $position['font_family'] ) ? $position['font_family'] : 'Arial';
+
+			// Set font before measuring.
+			$mpdf->SetFont( $font_family, 'B', $font_size );
+
+			// Get text width in mm.
+			$width_mm = $mpdf->GetStringWidth( $text_content );
+			$x_offset = $width_mm / 2;
+
+			$html = sprintf(
+				'<div class="certificate-element" style="position: absolute; left: %dmm; top: %dmm;">%s</div>',
+				$x - $x_offset,
+				$y,
+				$content
+			);
+		} else {
+			$html = sprintf(
+				'<div class="certificate-element" style="position: absolute; left: %dmm; top: %dmm;">%s</div>',
+				$x,
+				$y,
+				$content
+			);
+		}
+
 		$mpdf->WriteHTML( $html );
 	}
 
 	/**
-	 * Add image element to PDF
+	 * Add image element to certificate.
+	 *
+	 * @brief Adds an image element to the PDF.
+	 *
+	 * @details Positions and adds an image element to the PDF.
+	 * Converts pixel coordinates to millimeters and applies size constraints.
 	 *
 	 * @param Mpdf   $mpdf mPDF instance.
 	 * @param string $image_url Image URL.
-	 * @param array  $position Image position.
+	 * @param array  $position Image position coordinates.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private function add_image( $mpdf, $image_url, $position ) {
 		// Convert position from pixels to mm.
@@ -199,11 +287,21 @@ class CertificateGenerator {
 	}
 
 	/**
-	 * Get formatted course list
+	 * Format course list entries.
+	 *
+	 * @brief Formats the course list with styling.
+	 *
+	 * @details Creates formatted course entries with:
+	 * - Custom font settings from coordinates
+	 * - Course title, completion date, and instructor
+	 * - Proper spacing and margins
+	 * - Height calculations for pagination
 	 *
 	 * @param int   $user_id User ID.
 	 * @param array $course_ids Array of course IDs.
-	 * @return array Array of course entries.
+	 * @return array Array of formatted course entries with height information.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private function get_formatted_course_list( $user_id, $course_ids ) {
 		// Get font settings from coordinates.
@@ -260,12 +358,22 @@ class CertificateGenerator {
 	}
 
 	/**
-	 * Add course list to PDF with pagination
+	 * Add paginated course list.
+	 *
+	 * @brief Adds paginated course list to the PDF.
+	 *
+	 * @details Handles course list placement with:
+	 * - Automatic pagination
+	 * - Fixed elements on each page
+	 * - Proper spacing and margins
+	 * - Position calculations
 	 *
 	 * @param Mpdf  $mpdf mPDF instance.
 	 * @param array $course_entries Array of course entries.
 	 * @param array $initial_position Initial position for course list.
 	 * @param int   $user_id User ID.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private function add_course_list( $mpdf, $course_entries, $initial_position, $user_id ) {
 		// Convert initial position from pixels to mm.
@@ -274,11 +382,23 @@ class CertificateGenerator {
 
 		$current_y     = $start_y;
 		$page_height   = $mpdf->h; // Get page height in mm.
-		$margin_bottom = 20; // Bottom margin in mm.
+		$margin_bottom = 40; // Bottom margin in mm.
 
 		// Store coordinates for fixed elements.
 		$coordinates = $this->position_manager->get_coordinates( get_option( 'lcb_background_image' ) );
 		$user_name   = $this->data_retriever->get_user_display_name( $user_id );
+
+		// Add page number if coordinates exist.
+		if ( isset( $coordinates['page_number'] ) ) {
+			$page_number_html = sprintf(
+				'<div class="certificate-element" style="position: absolute; left: %dmm; top: %dmm; font-family: %s; font-size: %spt;">Page {PAGENO} of {nbpg}</div>',
+				round( $coordinates['page_number']['x'] * 25.4 / 96 ),
+				round( $coordinates['page_number']['y'] * 25.4 / 96 ),
+				isset( $coordinates['page_number']['font_family'] ) ? $coordinates['page_number']['font_family'] : 'Arial',
+				isset( $coordinates['page_number']['font_size'] ) ? $coordinates['page_number']['font_size'] : '12'
+			);
+			$mpdf->WriteHTML( $page_number_html );
+		}
 
 		// Get signature information.
 		$signature_id  = get_option( 'lcb_signature_image' );
@@ -294,6 +414,18 @@ class CertificateGenerator {
 			// Add signature if available and coordinates exist.
 			if ( $signature_url && isset( $coordinates['signature'] ) ) {
 				$this->add_image( $mpdf, $signature_url, $coordinates['signature'] );
+			}
+
+			// Add page number if coordinates exist.
+			if ( isset( $coordinates['page_number'] ) ) {
+				$page_number_html = sprintf(
+					'<div class="certificate-element" style="position: absolute; left: %dmm; top: %dmm; font-family: %s; font-size: %spt;">Page {PAGENO} of {nbpg}</div>',
+					round( $coordinates['page_number']['x'] * 25.4 / 96 ),
+					round( $coordinates['page_number']['y'] * 25.4 / 96 ),
+					isset( $coordinates['page_number']['font_family'] ) ? $coordinates['page_number']['font_family'] : 'Arial',
+					isset( $coordinates['page_number']['font_size'] ) ? $coordinates['page_number']['font_size'] : '12'
+				);
+				$mpdf->WriteHTML( $page_number_html );
 			}
 		};
 
@@ -328,11 +460,20 @@ class CertificateGenerator {
 	}
 
 	/**
-	 * Format user name with custom styles
+	 * Format user name with styles.
+	 *
+	 * @brief Formats user name with custom styling.
+	 *
+	 * @details Applies custom formatting to user name:
+	 * - Font family and size from settings
+	 * - Text transformation options
+	 * - Bold weight styling
 	 *
 	 * @param string $user_name User name.
-	 * @param array  $position User name position.
+	 * @param array  $position User name position and style settings.
 	 * @return string Formatted user name HTML.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private function format_user_name( $user_name, $position ) {
 		// Get font settings for username element.

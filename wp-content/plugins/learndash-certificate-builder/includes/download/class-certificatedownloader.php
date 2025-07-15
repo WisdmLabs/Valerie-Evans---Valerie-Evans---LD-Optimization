@@ -1,30 +1,62 @@
 <?php
 /**
- * Certificate Downloader class for LearnDash Certificate Builder
+ * Handles PDF certificate download operations.
+ *
+ * @file
+ * Certificate Downloader functionality for LearnDash Certificate Builder.
  *
  * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 
 namespace LearnDash_Certificate_Builder\Download;
 
 /**
- * Class CertificateDownloader
- * Handles secure delivery of generated PDF certificates
+ * Manages PDF certificate operations.
+ *
+ * @brief Certificate downloader class for handling PDF certificate operations.
+ *
+ * @details This class provides functionality to handle PDF certificate operations including:
+ * - Downloading certificates as attachments
+ * - Streaming certificates for browser viewing
+ * - Saving certificates to server
+ * - Deleting saved certificates
+ *
+ * All operations include security measures and proper file handling to ensure
+ * safe certificate delivery and storage.
+ *
+ * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 class CertificateDownloader {
 	/**
-	 * Maximum file size in bytes (50MB)
+	 * Defines size limit for certificate files.
 	 *
-	 * @var int
+	 * @brief Maximum allowed file size for certificates.
+	 *
+	 * @var int MAX_FILE_SIZE
+	 * @details Defines the maximum allowed size for certificate files (50MB).
+	 * @access private
 	 */
 	private const MAX_FILE_SIZE = 52428800;
 
 	/**
-	 * Download certificate PDF
+	 * Downloads certificate as attachment.
 	 *
-	 * @param string $pdf_content PDF content as string.
-	 * @param string $filename Desired filename.
-	 * @return bool Whether the download was successful.
+	 * @brief Downloads a certificate as an attachment.
+	 *
+	 * @details Handles the secure delivery of PDF certificates as downloadable files.
+	 * Sets appropriate headers for file download, performs security checks, and
+	 * ensures proper content delivery.
+	 *
+	 * @param string $pdf_content The PDF content as binary string.
+	 * @param string $filename The desired filename for download.
+	 * @return bool True on successful download, false on failure.
+	 * @throws \Exception When file handling errors occur.
+	 * @access public
+	 * @since 1.0.0
+	 *
+	 * @see stream_certificate() For in-browser viewing alternative.
 	 */
 	public function download_certificate( $pdf_content, $filename ) {
 		return $this->deliver_certificate( $pdf_content, $filename, 'attachment' );

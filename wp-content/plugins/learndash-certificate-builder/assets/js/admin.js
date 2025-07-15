@@ -156,8 +156,8 @@ jQuery( document ).ready( function ( $ ) {
                 y: y
             };
 
-            // Add font settings for username and course list
-            if ( ['user_name', 'course_list'].includes( elementId ) ) {
+            // Add font settings for username, course list and page number
+            if ( ['user_name', 'course_list', 'page_number'].includes( elementId ) ) {
                 // Get font size value directly from the input
                 let $fontSizeInput = $element.find( '.lcb-font-size' );
                 let fontSize = parseInt( $fontSizeInput.get( 0 ).value ) || ( elementId === 'user_name' ? 24 : 18 );

@@ -1,5 +1,13 @@
 <?php
 /**
+ * LearnDash Certificate Builder Plugin
+ *
+ * @file
+ * @brief Main plugin class for LearnDash Certificate Builder.
+ * @details This file contains the main plugin class that initializes all components
+ * and sets up the necessary WordPress hooks for certificate generation functionality.
+ * It handles both admin and frontend interactions for the certificate builder.
+ *
  * Plugin Name: WDM LearnDash Certificate Builder
  * Plugin URI: https://wisdmlabs.com/learndash-certificate-builder
  * Description: Custom certificate builder for LearnDash courses
@@ -12,7 +20,10 @@
  * Requires PHP: 7.4
  *
  * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
+
+namespace LearnDash_Certificate_Builder;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -35,50 +46,92 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/download/class-certificated
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin/class-settings.php';
 
 /**
- * Main plugin class
+ * Main plugin class for certificate generation.
+ *
+ * @brief Main plugin class that bootstraps the certificate builder functionality.
+ * @details Handles initialization of all plugin components including:
+ *          - Data retrieval for course completion
+ *          - Position management for certificate elements
+ *          - Certificate generation using mPDF
+ *          - Certificate download functionality
+ *          - Admin settings and UI
+ *          - Frontend form rendering
+ *
+ * @package LearnDash_Certificate_Builder
+ * @since 1.0.0
  */
 class LearnDash_Certificate_Builder {
 	/**
-	 * Data retriever instance
+	 * Data retriever component for course completion data.
 	 *
 	 * @var \LearnDash_Certificate_Builder\Data\DataRetriever
+	 * @brief Instance of the data retriever class.
+	 * @details Handles fetching course completion and user data from LearnDash.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private $data_retriever;
 
 	/**
-	 * Position manager instance
+	 * Position manager for certificate elements.
 	 *
 	 * @var \LearnDash_Certificate_Builder\Position\PositionManager
+	 * @brief Instance of the position manager class.
+	 * @details Manages element positions on the certificate template.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private $position_manager;
 
 	/**
-	 * Certificate generator instance
+	 * Certificate generator for PDF creation.
 	 *
 	 * @var \LearnDash_Certificate_Builder\Generation\CertificateGenerator
+	 * @brief Instance of the certificate generator class.
+	 * @details Handles PDF certificate generation using mPDF library.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private $certificate_generator;
 
 	/**
-	 * Certificate downloader instance
+	 * Certificate downloader for file handling.
 	 *
 	 * @var \LearnDash_Certificate_Builder\Download\CertificateDownloader
+	 * @brief Instance of the certificate downloader class.
+	 * @details Manages certificate file downloads and streaming.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private $certificate_downloader;
 
 	/**
-	 * Admin settings instance
+	 * Admin settings handler.
 	 *
 	 * @var \LearnDash_Certificate_Builder\Admin\Settings
+	 * @brief Instance of the admin settings class.
+	 * @details Handles plugin settings and admin interface.
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private $settings;
 
 	/**
-	 * Constructor
+	 * Initialize the plugin and set up hooks.
+	 *
+	 * @brief Constructor - Initialize plugin components and set up hooks.
+	 * @details Sets up all necessary WordPress hooks and initializes plugin components.
+	 * Registers admin menus, assets, and AJAX handlers for both admin and frontend.
+	 *
+	 * @access public
+	 * @since 1.0.0
 	 */
 	public function __construct() {
 		// Initialize components.
 		$this->init_components();
+
+		// Allow transform property in wp_kses.
+		add_filter( 'safe_style_css', array( $this, 'allow_transform_css' ) );
 
 		// Admin hooks.
 		$this->settings = new \LearnDash_Certificate_Builder\Admin\Settings();
@@ -93,7 +146,25 @@ class LearnDash_Certificate_Builder {
 	}
 
 	/**
-	 * Initialize plugin components
+	 * Allow transform CSS property in wp_kses
+	 *
+	 * @param array $styles Array of allowed CSS properties.
+	 * @return array Modified array of allowed CSS properties.
+	 */
+	public function allow_transform_css( $styles ) {
+		$styles[] = 'transform';
+		return $styles;
+	}
+
+	/**
+	 * Set up plugin components.
+	 *
+	 * @brief Initialize plugin components.
+	 * @details Creates instances of all required plugin components including data retrieval,
+	 * position management, certificate generation, and download handling.
+	 *
+	 * @access private
+	 * @since 1.0.0
 	 */
 	private function init_components() {
 		// Initialize data retriever.
@@ -124,7 +195,14 @@ class LearnDash_Certificate_Builder {
 	}
 
 	/**
-	 * Add admin menu
+	 * Create admin menu entries.
+	 *
+	 * @brief Add admin menu items.
+	 * @details Creates the plugin's admin menu entry under the LearnDash menu.
+	 *
+	 * @access public
+	 * @since 1.0.0
+	 * @action admin_menu
 	 */
 	public function add_admin_menu() {
 		add_menu_page(
@@ -140,9 +218,16 @@ class LearnDash_Certificate_Builder {
 
 
 	/**
-	 * Enqueue admin assets
+	 * Load admin JavaScript and CSS.
+	 *
+	 * @brief Enqueue admin assets.
+	 * @details Loads necessary JavaScript and CSS files for the admin interface.
+	 * Only loads on the plugin's admin page to avoid unnecessary asset loading.
 	 *
 	 * @param string $hook The current admin page hook.
+	 * @access public
+	 * @since 1.0.0
+	 * @action admin_enqueue_scripts
 	 */
 	public function enqueue_admin_assets( $hook ) {
 		// Only load on our plugin's page.
@@ -275,8 +360,8 @@ class LearnDash_Certificate_Builder {
 
 		// Download or stream the certificate based on request.
 		$success = $stream_mode ?
-			$this->certificate_downloader->stream_certificate( $pdf_content, $filename ) :
-			$this->certificate_downloader->download_certificate( $pdf_content, $filename );
+		$this->certificate_downloader->stream_certificate( $pdf_content, $filename ) :
+		$this->certificate_downloader->download_certificate( $pdf_content, $filename );
 
 		if ( ! $success ) {
 			wp_send_json_error( 'Failed to deliver certificate.' );
@@ -286,9 +371,17 @@ class LearnDash_Certificate_Builder {
 	}
 
 	/**
-	 * Render certificate generation form
+	 * Display the certificate generation form.
 	 *
-	 * @return string Form HTML.
+	 * @brief Render certificate generation form.
+	 * @details Outputs the frontend form for users to select completed courses
+	 * and generate certificates. Includes validation and user feedback.
+	 *
+	 * @access public
+	 * @since 1.0.0
+	 * @shortcode learndash_custom_certificate
+	 *
+	 * @return string Form HTML or error message if requirements not met.
 	 */
 	public function render_certificate_form() {
 		// Get completed courses for current user.
@@ -313,7 +406,15 @@ class LearnDash_Certificate_Builder {
 	}
 
 	/**
-	 * Handle AJAX request to get image data
+	 * Process image data requests.
+	 *
+	 * @brief Handle AJAX request to get image data.
+	 * @details Retrieves and returns image dimensions and URL for the admin interface.
+	 * Used for positioning elements on the certificate template.
+	 *
+	 * @access public
+	 * @since 1.0.0
+	 * @action wp_ajax_lcb_get_image_data
 	 */
 	public function handle_get_image_data() {
 		// Check nonce.
