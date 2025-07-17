@@ -20,9 +20,37 @@ $default_coordinates = array(
 		'font_family'    => 'Arial',
 		'text_transform' => 'none',
 	),
-	'course_list' => array(
+	'bacb_number' => array(
+		'x'              => 100,
+		'y'              => 150,
+		'font_size'      => 14,
+		'font_family'    => 'Arial',
+		'text_transform' => 'none',
+	),
+	'qaba_number' => array(
+		'x'              => 100,
+		'y'              => 200,
+		'font_size'      => 14,
+		'font_family'    => 'Arial',
+		'text_transform' => 'none',
+	),
+	'ibao_number' => array(
+		'x'              => 100,
+		'y'              => 250,
+		'font_size'      => 14,
+		'font_family'    => 'Arial',
+		'text_transform' => 'none',
+	),
+	'total_hours' => array(
 		'x'              => 100,
 		'y'              => 300,
+		'font_size'      => 14,
+		'font_family'    => 'Arial',
+		'text_transform' => 'none',
+	),
+	'course_list' => array(
+		'x'              => 100,
+		'y'              => 350,
 		'font_size'      => 18,
 		'font_family'    => 'Arial',
 		'text_transform' => 'none',
@@ -43,37 +71,27 @@ $default_coordinates = array(
 // Get coordinates for current background or use defaults.
 $current_coordinates = isset( $coordinates[ $background_id ] ) ? $coordinates[ $background_id ] : $default_coordinates;
 
-// Ensure font settings exist for username.
-if ( ! isset( $current_coordinates['user_name']['font_size'] ) ) {
-	$current_coordinates['user_name']['font_size'] = 24;
-}
-if ( ! isset( $current_coordinates['user_name']['font_family'] ) ) {
-	$current_coordinates['user_name']['font_family'] = 'Arial';
-}
-if ( ! isset( $current_coordinates['user_name']['text_transform'] ) ) {
-	$current_coordinates['user_name']['text_transform'] = 'none';
-}
+// Ensure font settings exist for all text elements.
+$text_elements = array(
+	'user_name'   => 24,
+	'bacb_number' => 14,
+	'qaba_number' => 14,
+	'ibao_number' => 14,
+	'total_hours' => 14,
+	'course_list' => 18,
+	'page_number' => 12,
+);
 
-// Ensure font settings exist for course list.
-if ( ! isset( $current_coordinates['course_list']['font_size'] ) ) {
-	$current_coordinates['course_list']['font_size'] = 18;
-}
-if ( ! isset( $current_coordinates['course_list']['font_family'] ) ) {
-	$current_coordinates['course_list']['font_family'] = 'Arial';
-}
-if ( ! isset( $current_coordinates['course_list']['text_transform'] ) ) {
-	$current_coordinates['course_list']['text_transform'] = 'none';
-}
-
-// Ensure font settings exist for course list.
-if ( ! isset( $current_coordinates['page_number']['font_size'] ) ) {
-	$current_coordinates['page_number']['font_size'] = 18;
-}
-if ( ! isset( $current_coordinates['page_number']['font_family'] ) ) {
-	$current_coordinates['page_number']['font_family'] = 'Arial';
-}
-if ( ! isset( $current_coordinates['page_number']['text_transform'] ) ) {
-	$current_coordinates['page_number']['text_transform'] = 'none';
+foreach ( $text_elements as $element => $default_size ) {
+	if ( ! isset( $current_coordinates[ $element ]['font_size'] ) ) {
+		$current_coordinates[ $element ]['font_size'] = $default_size;
+	}
+	if ( ! isset( $current_coordinates[ $element ]['font_family'] ) ) {
+		$current_coordinates[ $element ]['font_family'] = 'Arial';
+	}
+	if ( ! isset( $current_coordinates[ $element ]['text_transform'] ) ) {
+		$current_coordinates[ $element ]['text_transform'] = 'none';
+	}
 }
 
 // Only include the current background's coordinates in the form.
@@ -137,6 +155,10 @@ if ( $background_id ) {
 					<?php
 					$elements = array(
 						'user_name'   => __( 'User Name', 'learndash-certificate-builder' ),
+						'bacb_number' => __( 'BACB Certification Number', 'learndash-certificate-builder' ),
+						'qaba_number' => __( 'QABA Certification Number', 'learndash-certificate-builder' ),
+						'ibao_number' => __( 'IBAO Certification Number', 'learndash-certificate-builder' ),
+						'total_hours' => __( 'Total Hours', 'learndash-certificate-builder' ),
 						'course_list' => __( 'Course List', 'learndash-certificate-builder' ),
 						'signature'   => __( 'Signature', 'learndash-certificate-builder' ),
 						'page_number' => __( 'Page Number', 'learndash-certificate-builder' ),
@@ -154,12 +176,12 @@ if ( $background_id ) {
 								X: <input type="number" class="lcb-x-coordinate" value="<?php echo esc_attr( $pos['x'] ); ?>">
 								Y: <input type="number" class="lcb-y-coordinate" value="<?php echo esc_attr( $pos['y'] ); ?>">
 							</div>
-							<?php if ( in_array( $element_id, array( 'user_name', 'course_list', 'page_number' ), true ) ) : ?>
+							<?php if ( 'signature' !== $element_id ) : ?>
 								<div class="lcb-element-styles">
 									<div class="lcb-style-control">
 										<label>
 											<?php esc_html_e( 'Font Size:', 'learndash-certificate-builder' ); ?>
-											<input type="number" class="lcb-style-input lcb-font-size" value="<?php echo esc_attr( isset( $pos['font_size'] ) ? $pos['font_size'] : ( 'user_name' === $element_id ? 24 : 18 ) ); ?>">
+											<input type="number" class="lcb-style-input lcb-font-size" value="<?php echo esc_attr( isset( $pos['font_size'] ) ? $pos['font_size'] : $text_elements[ $element_id ] ); ?>">
 										</label>
 									</div>
 									<div class="lcb-style-control">
@@ -243,6 +265,17 @@ var lcb_admin = {
 	border: 1px solid #999;
 	cursor: move;
 	min-width: 100px;
+	z-index: 1;
+	transition: z-index 0s, box-shadow 0.2s;
+}
+
+.lcb-draggable-element:hover {
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.lcb-element-label {
+	font-weight: bold;
+	margin-bottom: 5px;
 }
 
 .lcb-element-coordinates {

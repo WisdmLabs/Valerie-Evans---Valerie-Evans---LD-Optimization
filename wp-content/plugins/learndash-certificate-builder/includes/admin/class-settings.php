@@ -107,6 +107,17 @@ class Settings {
 			return array();
 		}
 
+		// Define text elements that should have font settings.
+		$text_elements = array(
+			'user_name',
+			'bacb_number',
+			'qaba_number',
+			'ibao_number',
+			'total_hours',
+			'course_list',
+			'page_number',
+		);
+
 		// Sanitize each coordinate set.
 		$sanitized = array();
 		foreach ( $coordinates as $background_id => $elements ) {
@@ -123,8 +134,8 @@ class Settings {
 						'y' => absint( $pos['y'] ),
 					);
 
-					// Process font settings for username, course list and page number elements.
-					if ( in_array( $element, array( 'user_name', 'course_list', 'page_number' ), true ) ) {
+					// Process font settings for text elements.
+					if ( in_array( $element, $text_elements, true ) ) {
 						// Add font size if set.
 						if ( isset( $pos['font_size'] ) ) {
 							$sanitized[ absint( $background_id ) ][ $element ]['font_size'] = absint( $pos['font_size'] );
@@ -171,20 +182,57 @@ class Settings {
 		if ( empty( $coordinates ) || ! isset( $coordinates['default'] ) ) {
 			$coordinates['default'] = array(
 				'user_name'   => array(
-					'x' => 100,
-					'y' => 100,
+					'x'              => 100,
+					'y'              => 100,
+					'font_size'      => 24,
+					'font_family'    => 'Arial',
+					'text_transform' => 'none',
+				),
+				'bacb_number' => array(
+					'x'              => 100,
+					'y'              => 150,
+					'font_size'      => 14,
+					'font_family'    => 'Arial',
+					'text_transform' => 'none',
+				),
+				'qaba_number' => array(
+					'x'              => 100,
+					'y'              => 200,
+					'font_size'      => 14,
+					'font_family'    => 'Arial',
+					'text_transform' => 'none',
+				),
+				'ibao_number' => array(
+					'x'              => 100,
+					'y'              => 250,
+					'font_size'      => 14,
+					'font_family'    => 'Arial',
+					'text_transform' => 'none',
+				),
+				'total_hours' => array(
+					'x'              => 100,
+					'y'              => 300,
+					'font_size'      => 14,
+					'font_family'    => 'Arial',
+					'text_transform' => 'none',
 				),
 				'course_list' => array(
-					'x' => 100,
-					'y' => 300,
+					'x'              => 100,
+					'y'              => 350,
+					'font_size'      => 14,
+					'font_family'    => 'Arial',
+					'text_transform' => 'none',
 				),
 				'signature'   => array(
 					'x' => 100,
 					'y' => 400,
 				),
 				'page_number' => array(
-					'x' => 100,
-					'y' => 500,
+					'x'              => 100,
+					'y'              => 500,
+					'font_size'      => 12,
+					'font_family'    => 'Arial',
+					'text_transform' => 'none',
 				),
 			);
 		}

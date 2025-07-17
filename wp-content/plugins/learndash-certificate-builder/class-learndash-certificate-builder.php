@@ -44,6 +44,7 @@ require_once plugin_dir_path( __FILE__ ) . 'includes/position/class-positionmana
 require_once plugin_dir_path( __FILE__ ) . 'includes/generation/class-certificategenerator.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/download/class-certificatedownloader.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/admin/class-settings.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/admin/class-wdm-course-credit-settings.php';
 
 /**
  * Main plugin class for certificate generation.
@@ -327,6 +328,16 @@ class LearnDash_Certificate_Builder {
 			FILTER_VALIDATE_BOOLEAN
 		);
 
+		// Get and sanitize personal information.
+		$personal_info = array();
+		$raw_info      = filter_input( INPUT_POST, 'personal_info', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY );
+		if ( ! $raw_info ) {
+			$raw_info = array();
+		}
+		foreach ( $raw_info as $key => $value ) {
+			$personal_info[ sanitize_key( $key ) ] = sanitize_text_field( wp_unslash( $value ) );
+		}
+
 		if ( empty( $course_ids ) || ! $background_id ) {
 			wp_send_json_error( 'Missing required parameters.' );
 		}
@@ -340,7 +351,7 @@ class LearnDash_Certificate_Builder {
 		}
 
 		// Generate certificate.
-		$pdf_content = $this->certificate_generator->generate_certificate( $user_id, $course_ids, $background_id );
+		$pdf_content = $this->certificate_generator->generate_certificate( $user_id, $course_ids, $background_id, $personal_info );
 		if ( false === $pdf_content ) {
 			wp_send_json_error( 'Failed to generate certificate.' );
 		}

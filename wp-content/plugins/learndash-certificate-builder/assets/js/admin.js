@@ -72,6 +72,8 @@ jQuery( document ).ready( function ( $ ) {
             // If this is a background image, update canvas
             if ( targetId === 'lcb_background_image' ) {
                 updateCanvasDimensions();
+                // Submit the form to save the background image ID
+                $( 'form' ).submit();
             }
         } );
 
@@ -95,15 +97,22 @@ jQuery( document ).ready( function ( $ ) {
         // Hide remove button
         $( this ).addClass( 'lcb-hidden' ).hide();
 
-        // If this is a background image, update canvas
+        // If this is a background image, update canvas and submit form
         if ( targetId === 'lcb_background_image' ) {
             updateCanvasDimensions();
+            // Submit the form to save the removed background image
+            $( 'form' ).submit();
         }
     } );
 
     // Initialize draggable elements
     $( '.lcb-draggable-element' ).draggable( {
         containment: '.lcb-canvas',
+        start: function ( event, ui ) {
+            // Bring the element being dragged to the front
+            $( this ).css( 'z-index', 1000 );
+            $( '.lcb-draggable-element' ).not( this ).css( 'z-index', 1 );
+        },
         stop: function ( event, ui ) {
             let $canvas = $( '.lcb-canvas' );
             let canvasOffset = $canvas.offset();
@@ -121,6 +130,13 @@ jQuery( document ).ready( function ( $ ) {
             // Update hidden input with all coordinates
             updateCoordinatesInput();
         }
+    } );
+
+    // Handle manual coordinate input and bring element to front when clicked
+    $( '.lcb-draggable-element' ).on( 'click', function () {
+        // Bring clicked element to front
+        $( this ).css( 'z-index', 1000 );
+        $( '.lcb-draggable-element' ).not( this ).css( 'z-index', 1 );
     } );
 
     // Handle manual coordinate input
@@ -156,11 +172,14 @@ jQuery( document ).ready( function ( $ ) {
                 y: y
             };
 
-            // Add font settings for username, course list and page number
-            if ( ['user_name', 'course_list', 'page_number'].includes( elementId ) ) {
+            // Add font settings for all text elements except signature
+            if ( elementId !== 'signature' ) {
                 // Get font size value directly from the input
                 let $fontSizeInput = $element.find( '.lcb-font-size' );
-                let fontSize = parseInt( $fontSizeInput.get( 0 ).value ) || ( elementId === 'user_name' ? 24 : 18 );
+                let defaultSize = elementId === 'user_name' ? 24 :
+                    elementId === 'course_list' ? 18 :
+                        elementId === 'page_number' ? 12 : 14;
+                let fontSize = parseInt( $fontSizeInput.get( 0 ).value ) || defaultSize;
                 console.log( elementId + ' font size input current value:', fontSize );
 
                 coordinates[elementId].font_size = fontSize;

@@ -90,6 +90,8 @@ class PositionManager {
 	 * - User name placement
 	 * - Course list position
 	 * - Signature location
+	 * - Certification numbers
+	 * - Total hours
 	 *
 	 * @return array Default coordinates.
 	 * @access public
@@ -100,6 +102,22 @@ class PositionManager {
 			'user_name'   => array(
 				'x' => 300,
 				'y' => 200,
+			),
+			'bacb_number' => array(
+				'x' => 300,
+				'y' => 300,
+			),
+			'qaba_number' => array(
+				'x' => 300,
+				'y' => 350,
+			),
+			'ibao_number' => array(
+				'x' => 300,
+				'y' => 400,
+			),
+			'total_hours' => array(
+				'x' => 300,
+				'y' => 450,
 			),
 			'course_list' => array(
 				'x' => 300,
@@ -125,7 +143,15 @@ class PositionManager {
 	 * @since 1.0.0
 	 */
 	private function validate_coordinates( $coordinates ) {
-		$required_elements = array( 'user_name', 'course_list', 'signature' );
+		$required_elements = array(
+			'user_name',
+			'bacb_number',
+			'qaba_number',
+			'ibao_number',
+			'total_hours',
+			'course_list',
+			'signature',
+		);
 		$is_valid          = true;
 
 		// Check if all required elements exist and have valid coordinates.

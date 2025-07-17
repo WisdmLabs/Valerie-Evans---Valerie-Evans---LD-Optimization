@@ -1,89 +1,153 @@
 # LearnDash Certificate Builder
 
-A WordPress plugin that extends LearnDash LMS to provide custom certificate generation capabilities with precise element positioning.
+## Overview
+The LearnDash Certificate Builder is a WordPress plugin that enhances LearnDash LMS by providing a certificate generation system. It allows course creators to design custom certificates for their courses using a builder interface.
+
+**Version:** 1.0.1  
+**Requires at least:** WordPress 5.8  
+**Requires PHP:** 7.4  
+**Requires:** LearnDash LMS  
 
 ## Features
-
-- Visual drag-and-drop interface for positioning certificate elements
-- Custom background image support
-- Signature image upload
-- Course completion verification
-- PDF certificate generation with precise element positioning
-- Multiple delivery options (download or view in browser)
-- Secure certificate storage and delivery
-
-## Requirements
-
-- WordPress 5.8 or higher
-- PHP 7.4 or higher
-- LearnDash LMS plugin
-- Composer (for installation)
+- Certificate builder interface
+- PDF certificate generation using mPDF
+- Support for custom images
+- Dynamic data insertion from course completion
+- Basic shortcode for certificate display
+- Secure certificate download handling
+- Administrative settings interface
 
 ## Installation
 
-1. Download the plugin
-2. Upload to your WordPress plugins directory
-3. Run `composer install` in the plugin directory to install dependencies
-4. Activate the plugin through WordPress admin
+1. Upload the plugin files to `/wp-content/plugins/learndash-certificate-builder/` directory
+2. Ensure you have LearnDash LMS installed and activated
+3. Activate the plugin through the 'Plugins' menu in WordPress
+4. Navigate to Certificate Builder in the WordPress admin menu to configure settings
 
-## Usage
+## Configuration
 
-### Admin Settings
+### Accessing the Builder
+1. Log in to your WordPress admin panel
+2. Navigate to Certificate Builder in the main menu
+3. Use the builder interface to design your certificates
 
-1. Navigate to LearnDash > Certificate Builder
-2. Upload or select a background image
-3. Upload a signature image
-4. Use the drag-and-drop interface to position elements:
-   - User name
-   - Completion date
-   - Course list
-   - Signature
+### Available Elements
 
-### Frontend
+#### Text Elements
+- Student Name
+- Course Title
+- Completion Date
+- Custom Text
 
-1. Add the shortcode `[learndash_custom_certificate]` to any page
-2. Users will see their completed courses
-3. They can select courses and generate a certificate
-4. Choose to download or view the certificate in browser
+#### Image Elements
+- Background Template
+- Logo
+- Signature
 
-## Development
+### Using the Certificate Builder
 
-### Directory Structure
+1. **Configure Settings**
+   - Upload background image
+   - Set certificate dimensions
+   - Configure text elements
 
+2. **Position Elements**
+   - Use the interface to position elements
+   - Save element positions
+
+### Shortcode Usage
+
+Display certificate generation form:
+```php
+[learndash_custom_certificate]
+```
+
+The shortcode displays:
+- A form for completed courses (if user is logged in and has completed courses)
+- Login message (if user is not logged in)
+- Completion message (if user has no completed courses)
+
+## PDF Generation
+
+### Supported Features
+- Custom page sizes
+- Image handling
+- Text positioning
+- Dynamic data insertion
+
+### Best Practices
+
+1. **Image Optimization**
+   - Use web-optimized images
+   - Recommended formats: JPG, PNG
+   - Keep file sizes reasonable
+   - Use appropriate resolution
+
+2. **Layout Design**
+   - Test with different content lengths
+   - Consider printer margins
+   - Design for both digital and print use
+
+## Troubleshooting
+
+### Common Issues
+
+1. **PDF Generation Fails**
+   - Check PHP memory limit (64MB minimum recommended)
+   - Verify file permissions
+   - Ensure all assets are accessible
+   - Check error logs for specific issues
+
+2. **Image Problems**
+   - Check image file permissions
+   - Verify image path is correct
+   - Ensure image format is supported
+   - Optimize large images
+
+### Support
+For technical support, please:
+1. Check the plugin documentation
+2. Review WordPress error logs
+3. Contact support with:
+   - WordPress version
+   - LearnDash version
+   - Error messages
+   - Steps to reproduce issues
+
+## Technical Details
+
+### System Requirements
+- PHP 7.4 or higher
+- WordPress 5.8 or higher
+- LearnDash LMS
+- mPDF 8.2.1 or higher
+- Minimum 64MB PHP memory limit
+
+### File Structure
 ```
 learndash-certificate-builder/
 ├── assets/
 │   ├── css/
-│   │   └── admin.css
-│   └── js/
-│       └── admin.js
+│   ├── js/
+│   └── images/
 ├── includes/
-│   ├── Admin/
-│   ├── Data/
-│   ├── Download/
-│   ├── Generation/
-│   └── Position/
-├── templates/
 │   ├── admin/
-│   └── frontend/
+│   ├── data/
+│   ├── generation/
+│   ├── position/
+│   └── download/
+├── templates/
 ├── languages/
-├── composer.json
-├── class-learndash-certificate-builder.php
-└── learndash-certificate-builder.php
+└── vendor/
 ```
 
-### Modules
+## Changelog
 
-1. **UI Module**: Handles admin settings and frontend interface
-2. **Data Retrieval**: Manages course completion data
-3. **Position Management**: Handles element coordinate storage
-4. **Certificate Generation**: Creates PDF certificates using mPDF
-5. **Download Management**: Handles secure certificate delivery
-
-## Support
-
-For support, please contact [support@example.com](mailto:support@example.com)
+### 1.0.1
+- Initial public release
+- Basic certificate builder interface
+- PDF generation with mPDF
+- LearnDash course completion integration
 
 ## License
-
-GPL v2 or later 
+GPL-2.0-or-later 

@@ -83,14 +83,15 @@ class CertificateGenerator {
 	 * @param int   $user_id User ID.
 	 * @param array $course_ids Array of course IDs.
 	 * @param int   $background_id Background image ID.
+	 * @param array $personal_info Array of personal information including name.
 	 * @return string|false PDF content as string or false on failure.
 	 * @throws MpdfException When PDF generation fails.
 	 * @access public
 	 * @since 1.0.0
 	 */
-	public function generate_certificate( $user_id, $course_ids, $background_id ) {
+	public function generate_certificate( $user_id, $course_ids, $background_id, $personal_info = array() ) {
 		try {
-			$mpdf = $this->init_mpdf();
+			$mpdf = $this->init_mpdf( $background_id );
 
 			// Get element coordinates.
 			$coordinates = $this->position_manager->get_coordinates( $background_id );
@@ -108,7 +109,7 @@ class CertificateGenerator {
 			// Add formatted course list to certificate.
 			if ( isset( $coordinates['course_list'] ) ) {
 				$course_entries = $this->get_formatted_course_list( $user_id, $course_ids );
-				$this->add_course_list( $mpdf, $course_entries, $coordinates['course_list'], $user_id );
+				$this->add_course_list( $mpdf, $course_entries, $coordinates['course_list'], $user_id, $course_ids, $personal_info );
 			}
 
 			return $mpdf->Output( '', 'S' );
@@ -129,15 +130,15 @@ class CertificateGenerator {
 	 * - Multi-page support configuration
 	 * - Default CSS styles
 	 *
+	 * @param int $background_id The background image ID.
 	 * @return Mpdf mPDF instance.
 	 * @throws MpdfException When mPDF initialization fails.
 	 * @access private
 	 * @since 1.0.0
 	 */
-	private function init_mpdf() {
+	private function init_mpdf( $background_id = null ) {
 		// Get background image dimensions.
-		$background_id = get_option( 'lcb_background_image' );
-		$image_data    = wp_get_attachment_image_src( $background_id, 'full' );
+		$image_data = $background_id ? wp_get_attachment_image_src( $background_id, 'full' ) : null;
 
 		// Default to A4 landscape if no image.
 		$format = 'A4-L';
@@ -372,10 +373,12 @@ class CertificateGenerator {
 	 * @param array $course_entries Array of course entries.
 	 * @param array $initial_position Initial position for course list.
 	 * @param int   $user_id User ID.
+	 * @param array $course_ids Array of course IDs.
+	 * @param array $personal_info Array of personal information including name.
 	 * @access private
 	 * @since 1.0.0
 	 */
-	private function add_course_list( $mpdf, $course_entries, $initial_position, $user_id ) {
+	private function add_course_list( $mpdf, $course_entries, $initial_position, $user_id, $course_ids, $personal_info = array() ) {
 		// Convert initial position from pixels to mm.
 		$start_x = isset( $initial_position['x'] ) ? round( $initial_position['x'] * 25.4 / 96 ) : 0;
 		$start_y = isset( $initial_position['y'] ) ? round( $initial_position['y'] * 25.4 / 96 ) : 0;
@@ -386,29 +389,73 @@ class CertificateGenerator {
 
 		// Store coordinates for fixed elements.
 		$coordinates = $this->position_manager->get_coordinates( get_option( 'lcb_background_image' ) );
-		$user_name   = $this->data_retriever->get_user_display_name( $user_id );
-
-		// Add page number if coordinates exist.
-		if ( isset( $coordinates['page_number'] ) ) {
-			$page_number_html = sprintf(
-				'<div class="certificate-element" style="position: absolute; left: %dmm; top: %dmm; font-family: %s; font-size: %spt;">Page {PAGENO} of {nbpg}</div>',
-				round( $coordinates['page_number']['x'] * 25.4 / 96 ),
-				round( $coordinates['page_number']['y'] * 25.4 / 96 ),
-				isset( $coordinates['page_number']['font_family'] ) ? $coordinates['page_number']['font_family'] : 'Arial',
-				isset( $coordinates['page_number']['font_size'] ) ? $coordinates['page_number']['font_size'] : '12'
-			);
-			$mpdf->WriteHTML( $page_number_html );
-		}
 
 		// Get signature information.
 		$signature_id  = get_option( 'lcb_signature_image' );
 		$signature_url = $signature_id ? wp_get_attachment_url( $signature_id ) : false;
 
+		// Use submitted name if available, otherwise fallback to user's display name.
+		$user_name = ! empty( $personal_info['name'] ) ? $personal_info['name'] : $this->data_retriever->get_user_display_name( $user_id );
+
+		// Add certification numbers if available.
+		$certification_elements = array(
+			'bacb_number' => array(
+				'value' => ! empty( $personal_info['bacb_number'] ) ? $personal_info['bacb_number'] : '',
+			),
+			'qaba_number' => array(
+				'value' => ! empty( $personal_info['qaba_number'] ) ? $personal_info['qaba_number'] : '',
+			),
+			'ibao_number' => array(
+				'value' => ! empty( $personal_info['ibao_number'] ) ? $personal_info['ibao_number'] : '',
+			),
+		);
+
 		// Add fixed elements function.
-		$add_fixed_elements = function() use ( $mpdf, $coordinates, $user_name, $signature_url ) {
+		$add_fixed_elements = function() use ( $mpdf, $coordinates, $user_name, $signature_url, $certification_elements, $course_ids ) {
 			// Add username if coordinates exist.
 			if ( $user_name && isset( $coordinates['user_name'] ) ) {
 				$this->add_element( $mpdf, $this->format_user_name( $user_name, $coordinates['user_name'] ), $coordinates['user_name'] );
+			}
+
+			// Add certification numbers if available.
+			foreach ( $certification_elements as $element_id => $element_data ) {
+				if ( ! empty( $element_data['value'] ) && isset( $coordinates[ $element_id ] ) ) {
+					$pos   = $coordinates[ $element_id ];
+					$style = sprintf(
+						'font-family: %s; font-size: %spt; text-transform: %s;',
+						isset( $pos['font_family'] ) ? $pos['font_family'] : 'Arial',
+						isset( $pos['font_size'] ) ? $pos['font_size'] : '14',
+						isset( $pos['text_transform'] ) ? $pos['text_transform'] : 'none'
+					);
+					$html  = sprintf(
+						'<div class="certificate-element" style="position: absolute; left: %dmm; top: %dmm;"><div style="%s">%s</div></div>',
+						round( $pos['x'] * 25.4 / 96 ),
+						round( $pos['y'] * 25.4 / 96 ),
+						$style,
+						esc_html( $element_data['value'] )
+					);
+					$mpdf->WriteHTML( $html );
+				}
+			}
+
+			// Add total hours if coordinates exist.
+			if ( isset( $coordinates['total_hours'] ) ) {
+				$total_hours = $this->calculate_total_hours( $course_ids );
+				$pos         = $coordinates['total_hours'];
+				$style       = sprintf(
+					'font-family: %s; font-size: %spt; text-transform: %s;',
+					isset( $pos['font_family'] ) ? $pos['font_family'] : 'Arial',
+					isset( $pos['font_size'] ) ? $pos['font_size'] : '14',
+					isset( $pos['text_transform'] ) ? $pos['text_transform'] : 'none'
+				);
+				$html        = sprintf(
+					'<div class="certificate-element" style="position: absolute; left: %dmm; top: %dmm;"><table cellpadding="0" cellspacing="0" style="border-collapse: collapse;"><tr><td style="%s">%s</td></tr></table></div>',
+					round( $pos['x'] * 25.4 / 96 ),
+					round( $pos['y'] * 25.4 / 96 ),
+					$style,
+					esc_html( $total_hours )
+				);
+				$mpdf->WriteHTML( $html );
 			}
 
 			// Add signature if available and coordinates exist.
@@ -489,5 +536,35 @@ class CertificateGenerator {
 		);
 
 		return sprintf( '<div style="%s">%s</div>', $style, esc_html( $user_name ) );
+	}
+
+	/**
+	 * Calculate total hours for courses.
+	 *
+	 * @brief Calculates total hours by summing credit amounts from selected courses.
+	 * @details Gets the credit amount meta value for each course and adds them up.
+	 *
+	 * @param array $course_ids Array of course IDs.
+	 * @return string Total hours formatted to one decimal place.
+	 * @access private
+	 * @since 1.0.0
+	 */
+	private function calculate_total_hours( $course_ids ) {
+		error_log( 'Course IDs: ' . print_r( $course_ids, true ) );
+		if ( empty( $course_ids ) || ! is_array( $course_ids ) ) {
+			return '0';
+		}
+
+		$total_hours = 0;
+
+		foreach ( $course_ids as $course_id ) {
+			$credit_amount = get_post_meta( $course_id, 'wdm_credit_amount', true );
+			if ( ! empty( $credit_amount ) && is_numeric( $credit_amount ) ) {
+				$total_hours += floatval( $credit_amount );
+			}
+		}
+
+		// Format to one decimal place.
+		return number_format( $total_hours, 1 );
 	}
 }

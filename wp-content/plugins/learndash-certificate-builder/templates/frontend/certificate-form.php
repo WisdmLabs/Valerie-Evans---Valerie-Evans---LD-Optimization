@@ -20,6 +20,26 @@ if ( ! $background_id ) {
 <div class="lcb-certificate-form">
 	<h2><?php esc_html_e( 'Generate Certificate', 'learndash-certificate-builder' ); ?></h2>
 	<form id="lcb-generate-form" method="post">
+		<div class="lcb-personal-info">
+			<h3><?php esc_html_e( 'Personal Information', 'learndash-certificate-builder' ); ?></h3>
+			<div class="lcb-form-field">
+				<label for="lcb-name"><?php esc_html_e( 'Name', 'learndash-certificate-builder' ); ?></label>
+				<input type="text" id="lcb-name" name="personal_info[name]" required>
+			</div>
+			<div class="lcb-form-field">
+				<label for="lcb-bacb"><?php esc_html_e( 'BACB Certification Number', 'learndash-certificate-builder' ); ?></label>
+				<input type="text" id="lcb-bacb" name="personal_info[bacb_number]">
+			</div>
+			<div class="lcb-form-field">
+				<label for="lcb-qaba"><?php esc_html_e( 'QABA Certification Number', 'learndash-certificate-builder' ); ?></label>
+				<input type="text" id="lcb-qaba" name="personal_info[qaba_number]">
+			</div>
+			<div class="lcb-form-field">
+				<label for="lcb-ibao"><?php esc_html_e( 'IBAO Certification Number', 'learndash-certificate-builder' ); ?></label>
+				<input type="text" id="lcb-ibao" name="personal_info[ibao_number]">
+			</div>
+		</div>
+
 		<div class="lcb-course-list">
 			<h3><?php esc_html_e( 'Select Completed Courses', 'learndash-certificate-builder' ); ?></h3>
 			<?php foreach ( $completed_courses as $course ) : ?>
@@ -74,6 +94,13 @@ jQuery(document).ready(function($) {
 		var $button = $form.find('button[type="submit"]');
 		var $messages = $('#lcb-form-messages');
 		var streamMode = $form.find('input[name="stream_mode"]:checked').val() === '1';
+		
+		// Check if name is filled
+		var name = $form.find('#lcb-name').val().trim();
+		if (!name) {
+			$messages.html('<div class="notice notice-error"><p><?php echo esc_js( __( 'Please enter your name.', 'learndash-certificate-builder' ) ); ?></p></div>');
+			return;
+		}
 		
 		// Check if at least one course is selected
 		if (!$form.find('input[name="course_ids[]"]:checked').length) {
@@ -161,6 +188,44 @@ jQuery(document).ready(function($) {
 	border: 1px solid #ddd;
 	border-radius: 4px;
 	box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.lcb-personal-info {
+	margin-bottom: 2em;
+	padding-bottom: 2em;
+	border-bottom: 1px solid #eee;
+}
+
+.lcb-personal-info h3 {
+	margin-top: 0;
+	margin-bottom: 1em;
+}
+
+.lcb-form-field {
+	margin-bottom: 1.5em;
+}
+
+.lcb-form-field label {
+	display: block;
+	margin-bottom: 0.5em;
+	font-weight: bold;
+	color: #333;
+}
+
+.lcb-form-field input[type="text"] {
+	width: calc(100% - 2em); /* Subtract padding from width */
+	padding: 0.75em 1em;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 1em;
+	line-height: 1.5;
+	box-sizing: border-box;
+}
+
+.lcb-form-field input[type="text"]:focus {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: none;
 }
 
 .lcb-course-list {
